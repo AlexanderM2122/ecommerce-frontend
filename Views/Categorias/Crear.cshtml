@@ -1,0 +1,42 @@
+
+@model CategoriaForm
+
+@{
+    ViewData["Title"] = "Crear categoría";
+}
+
+<h2>Crear categoría</h2>
+
+<form asp-controller="Categorias"
+      asp-action="Crear"
+      method="post">
+
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="ModelOnly"
+         class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Nombre" class="form-label">
+            Nombre
+        </label>
+
+        <input asp-for="Nombre"
+               class="form-control"
+               maxlength="255"
+               required />
+
+        <span asp-validation-for="Nombre"
+              class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Guardar
+    </button>
+
+    <a asp-controller="Categorias"
+       asp-action="Index"
+       class="btn btn-secondary">
+        Cancelar
+    </a>
+</form>

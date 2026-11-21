@@ -1,0 +1,60 @@
+
+@model Categoria
+
+@{
+    ViewData["Title"] = "Eliminar categoría";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Eliminar categoría</h2>
+
+    @if (Model.Protegida)
+    {
+        <div class="alert alert-warning">
+            Esta categoría está protegida y no se puede eliminar.
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-danger">
+            ¿Estás seguro de que deseas eliminar esta categoría?
+        </div>
+
+        <dl class="row">
+            <dt class="col-sm-2">ID</dt>
+            <dd class="col-sm-10">@Model.CategoriaId</dd>
+
+            <dt class="col-sm-2">Nombre</dt>
+            <dd class="col-sm-10">@Model.Nombre</dd>
+        </dl>
+
+        <form asp-controller="Categorias"
+              asp-action="EliminarConfirmado"
+              asp-route-id="@Model.CategoriaId"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <button type="submit"
+                    class="btn btn-danger">
+                Confirmar eliminación
+            </button>
+
+            <a asp-controller="Categorias"
+               asp-action="Index"
+               class="btn btn-secondary">
+                Cancelar
+            </a>
+        </form>
+    }
+
+    @if (Model.Protegida)
+    {
+        <a asp-controller="Categorias"
+           asp-action="Index"
+           class="btn btn-secondary">
+            Volver
+        </a>
+    }
+</div>

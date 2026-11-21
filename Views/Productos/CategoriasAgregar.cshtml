@@ -1,0 +1,62 @@
+
+@model ProductoCategoriaAgregarForm
+
+@{
+    ViewData["Title"] = "Agregar categoría";
+}
+
+<div class="container mt-4">
+
+    <h2>Agregar categoría</h2>
+
+    <p>
+        Producto: <strong>@Model.Producto?.Titulo</strong>
+    </p>
+
+    <form asp-action="CategoriasAgregar"
+          asp-route-id="@Model.Producto?.ProductoId"
+          method="post">
+
+        @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="ModelOnly"
+             class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="CategoriaId"
+                   class="form-label">
+                Categoría
+            </label>
+
+            <select asp-for="CategoriaId"
+                    class="form-select"
+                    required>
+
+                <option value="">Selecciona una categoría</option>
+
+                @foreach (var categoria in Model.CategoriasDisponibles)
+                {
+                    <option value="@categoria.CategoriaId">
+                        @categoria.Nombre
+                    </option>
+                }
+            </select>
+
+            <span asp-validation-for="CategoriaId"
+                  class="text-danger"></span>
+        </div>
+
+        <button type="submit"
+                class="btn btn-primary"
+                disabled="@(Model.CategoriasDisponibles.Count == 0)">
+            Agregar
+        </button>
+
+        <a asp-action="Categorias"
+           asp-route-id="@Model.Producto?.ProductoId"
+           class="btn btn-secondary">
+            Cancelar
+        </a>
+
+    </form>
+</div>

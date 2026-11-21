@@ -1,0 +1,61 @@
+
+# ==========================================
+# ASP.NET Core / .NET 10
+# ==========================================
+bin/
+obj/
+**/bin/
+**/obj/
+artifacts/
+TestResults/
+*.dll
+*.pdb
+*.exe
+
+# ==========================================
+# Visual Studio / VS Code
+# ==========================================
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ==========================================
+# Configuración local y secretos
+# ==========================================
+.env
+.env.*
+!.env.example
+appsettings.Development.json
+appsettings.Production.json
+appsettings.Local.json
+secrets.json
+
+# ==========================================
+# Certificados y claves privadas
+# ==========================================
+*.pfx
+*.p12
+*.pem
+*.key
+*.crt
+
+# ==========================================
+# Archivos temporales
+# ==========================================
+*.tmp
+*.temp
+*.log
+*.bak
+*.swp
+*~
+logs/
+
+# ==========================================
+# Archivos del sistema operativo
+# ==========================================
+.DS_Store
+Thumbs.db
+desktop.ini

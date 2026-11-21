@@ -1,0 +1,98 @@
+
+@model Producto
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Detalle del producto";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Detalle del producto</h2>
+
+    @if (TempData["Mensaje"] is string mensaje)
+    {
+        <div class="alert alert-success">
+            @mensaje
+        </div>
+    }
+
+    @if (TempData["Aviso"] is string aviso)
+    {
+        <div class="alert alert-warning">
+            @aviso
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+
+            <h3 class="card-title">@Model.Titulo</h3>
+
+            <hr />
+
+            <dl class="row">
+
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">
+                    @Model.ProductoId
+                </dd>
+
+                <dt class="col-sm-3">Descripción</dt>
+                <dd class="col-sm-9">
+                    @Model.Descripcion
+                </dd>
+
+                <dt class="col-sm-3">Precio</dt>
+                <dd class="col-sm-9">
+                    @Model.Precio.ToString(
+                        "C",
+                        CultureInfo.GetCultureInfo("es-MX"))
+                </dd>
+
+                <dt class="col-sm-3">Categorías</dt>
+                <dd class="col-sm-9">
+                    @if (Model.Categorias.Count > 0)
+                    {
+                        @string.Join(", ",
+                            Model.Categorias.Select(c => c.Nombre))
+                    }
+                    else
+                    {
+                        <span>Sin categorías</span>
+                    }
+                </dd>
+
+            </dl>
+
+            <a asp-controller="Productos"
+               asp-action="Index"
+               class="btn btn-secondary">
+                Volver al listado
+            </a>
+
+
+            @if (User.IsInRole("Administrador"))
+            {
+                <a asp-controller="Productos"
+                asp-action="Editar"
+                asp-route-id="@Model.ProductoId"
+                class="btn btn-warning">
+                    Editar producto
+                </a>
+            }
+
+
+            @if (User.IsInRole("Administrador"))
+            {
+                <a asp-controller="Productos"
+                asp-action="Categorias"
+                asp-route-id="@Model.ProductoId"
+                class="btn btn-info">
+                    Administrar categorías
+                </a>
+            }
+
+        </div>
+    </div>
+</div>
