@@ -1,0 +1,45 @@
+
+@model Archivo
+
+@{
+    ViewData["Title"] = "Detalle del archivo";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Detalle del archivo</h2>
+
+
+    @if (TempData["Mensaje"] is string mensaje)
+    {
+        <div class="alert alert-success">
+            @mensaje
+        </div>
+    }
+
+    <partial name="_DetallePartial" model="Model" />
+
+    <div class="mt-3">
+        <a asp-controller="Archivos"
+           asp-action="Index"
+           class="btn btn-secondary">
+            Volver al listado
+        </a>
+
+        <a asp-controller="Archivos"
+        asp-action="Editar"
+        asp-route-id="@Model.ArchivoId"
+        class="btn btn-warning">
+            Reemplazar imagen
+        </a>
+
+        <a asp-controller="Archivos"
+        asp-action="Eliminar"
+        asp-route-id="@Model.ArchivoId"
+        class="btn btn-danger">
+            Eliminar imagen
+        </a>
+
+    </div>
+
+</div>

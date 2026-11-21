@@ -1,0 +1,86 @@
+
+@model ArchivoEditarForm
+
+@{
+    ViewData["Title"] = "Reemplazar imagen";
+    var archivo = Model.Actual;
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Reemplazar imagen</h2>
+
+    @if (archivo is not null)
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+
+                <h5>Imagen actual</h5>
+
+                <img src="@Url.Action(
+                    "Imagen",
+                    "Archivos",
+                    new { id = archivo.ArchivoId })"
+                     alt="@archivo.Nombre"
+                     class="img-thumbnail mb-3"
+                     style="max-height:250px" />
+
+                <p>
+                    <strong>ID:</strong> @archivo.ArchivoId
+                </p>
+
+                <p>
+                    <strong>Nombre:</strong> @archivo.Nombre
+                </p>
+
+            </div>
+        </div>
+
+        <form asp-controller="Archivos"
+              asp-action="Editar"
+              asp-route-id="@archivo.ArchivoId"
+              method="post"
+              enctype="multipart/form-data">
+
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="All"
+                 class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+
+                <label asp-for="File"
+                       class="form-label">
+                    Seleccionar nueva imagen JPG
+                </label>
+
+                <input asp-for="File"
+                       type="file"
+                       accept=".jpg,image/jpeg"
+                       class="form-control"
+                       required />
+
+                <span asp-validation-for="File"
+                      class="text-danger"></span>
+
+                <div class="form-text">
+                    Formato JPG. Tamaño máximo: 5 MB.
+                </div>
+
+            </div>
+
+            <button type="submit"
+                    class="btn btn-primary">
+                Guardar cambios
+            </button>
+
+            <a asp-controller="Archivos"
+               asp-action="Index"
+               class="btn btn-secondary">
+                Cancelar
+            </a>
+
+        </form>
+    }
+
+</div>

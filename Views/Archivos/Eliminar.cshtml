@@ -1,0 +1,45 @@
+
+@model Archivo
+
+@{
+    ViewData["Title"] = "Eliminar imagen";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Eliminar imagen</h2>
+
+    <div class="alert alert-danger">
+        ¿Estás seguro de que deseas eliminar esta imagen?
+        Esta acción no se puede deshacer.
+    </div>
+
+    <div class="alert alert-warning">
+        Si la imagen está asociada a un producto,
+        este perderá su imagen, pero no será eliminado.
+    </div>
+
+    <partial name="_DetallePartial" model="Model" />
+
+    <form asp-controller="Archivos"
+          asp-action="EliminarConfirmado"
+          asp-route-id="@Model.ArchivoId"
+          method="post"
+          class="mt-4">
+
+        @Html.AntiForgeryToken()
+
+        <button type="submit"
+                class="btn btn-danger">
+            Confirmar eliminación
+        </button>
+
+        <a asp-controller="Archivos"
+           asp-action="Index"
+           class="btn btn-secondary">
+            Cancelar
+        </a>
+
+    </form>
+
+</div>

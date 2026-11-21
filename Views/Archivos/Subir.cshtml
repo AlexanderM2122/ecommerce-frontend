@@ -1,0 +1,56 @@
+
+@model ArchivoSubirForm
+
+@{
+    ViewData["Title"] = "Subir imagen";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Subir imagen</h2>
+
+    <form asp-controller="Archivos"
+          asp-action="Subir"
+          method="post"
+          enctype="multipart/form-data">
+
+        @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="All"
+             class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="File"
+                   class="form-label">
+                Seleccionar imagen JPG
+            </label>
+
+            <input asp-for="File"
+                   type="file"
+                   accept=".jpg,image/jpeg"
+                   class="form-control"
+                   required />
+
+            <span asp-validation-for="File"
+                  class="text-danger"></span>
+
+            <div class="form-text">
+                Formato permitido: JPG.
+                Tamaño máximo: 5 MB.
+            </div>
+        </div>
+
+        <button type="submit"
+                class="btn btn-primary">
+            Subir imagen
+        </button>
+
+        <a asp-controller="Archivos"
+           asp-action="Index"
+           class="btn btn-secondary">
+            Cancelar
+        </a>
+
+    </form>
+
+</div>
