@@ -47,6 +47,17 @@
 
             @Html.AntiForgeryToken()
 
+
+            @if (User.IsInRole("Administrador"))
+            {
+                <a class="nav-link"
+                asp-controller="Usuarios"
+                asp-action="Index">
+                    Usuarios
+                </a>
+            }
+
+
             <button type="submit"
                     class="btn btn-outline-danger">
                 Cerrar sesión

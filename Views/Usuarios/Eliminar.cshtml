@@ -1,0 +1,40 @@
+
+@model Usuario
+
+@{
+    ViewData["Title"] = "Eliminar usuario";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Eliminar usuario</h2>
+
+    <div class="alert alert-danger">
+        ¿Estás seguro de que deseas eliminar este usuario?
+        Esta acción no se puede deshacer.
+    </div>
+
+    <partial name="_DetallePartial" model="Model" />
+
+    <form asp-controller="Usuarios"
+          asp-action="EliminarConfirmado"
+          asp-route-email="@Model.Email"
+          method="post"
+          class="mt-4">
+
+        @Html.AntiForgeryToken()
+
+        <button type="submit"
+                class="btn btn-danger">
+            Confirmar eliminación
+        </button>
+
+        <a asp-controller="Usuarios"
+           asp-action="Index"
+           class="btn btn-secondary">
+            Cancelar
+        </a>
+
+    </form>
+
+</div>

@@ -164,6 +164,41 @@ builder.Services.AddHttpClient<ProductosClientService>(
     })
     .AddHttpMessageHandler<EnviaBearerDelegatingHandler>();
 
+
+
+    builder.Services.AddHttpClient<UsuariosClientService>(
+        (services, client) =>
+        {
+            var configuration = services
+                .GetRequiredService<IConfiguration>();
+
+            var environment = services
+                .GetRequiredService<IHostEnvironment>();
+
+            var baseUrl = configuration["BackendApi:BaseUrl"]
+                ?? throw new InvalidOperationException(
+                    "No se configuró el backend.");
+
+            var uri = new Uri(baseUrl, UriKind.Absolute);
+
+            var permiteHttpLocal =
+                environment.IsDevelopment() &&
+                uri.Scheme == Uri.UriSchemeHttp &&
+                uri.IsLoopback;
+
+            if (uri.Scheme != Uri.UriSchemeHttps &&
+                !permiteHttpLocal)
+            {
+                throw new InvalidOperationException(
+                    "El backend requiere HTTPS.");
+            }
+
+            client.BaseAddress = uri;
+            client.Timeout = TimeSpan.FromSeconds(10);
+        })
+        .AddHttpMessageHandler<EnviaBearerDelegatingHandler>();
+
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
