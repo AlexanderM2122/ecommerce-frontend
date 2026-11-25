@@ -1,4 +1,3 @@
-
 using EcommerceFrontend.Middlewares;
 using EcommerceFrontend.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -7,22 +6,19 @@ using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// MVC y protección CSRF.
+// MVC y protección CSRF global.
 builder.Services.AddControllersWithViews(options =>
 {
-    options.Filters.Add(
-        new AutoValidateAntiforgeryTokenAttribute());
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
 });
 
 // Almacenamiento del JWT en el servidor.
 builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<
-    IAccessTokenStore, MemoryAccessTokenStore>();
+builder.Services.AddSingleton<IAccessTokenStore, MemoryAccessTokenStore>();
 
-// Autenticación mediante cookies.
+// Autenticación mediante cookies endurecidas.
 builder.Services
-    .AddAuthentication(
-        CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.LoginPath = "/Auth";
@@ -40,19 +36,13 @@ builder.Services
         // Comprobar que la sesión exista en el servidor.
         options.Events.OnValidatePrincipal = async context =>
         {
-            var sessionId = context.Principal?
-                .FindFirst("session_id")?.Value;
+            var sessionId = context.Principal?.FindFirst("session_id")?.Value;
+            var store = context.HttpContext.RequestServices.GetRequiredService<IAccessTokenStore>();
 
-            var store = context.HttpContext.RequestServices
-                .GetRequiredService<IAccessTokenStore>();
-
-            if (sessionId is null ||
-                !store.TryGet(sessionId, out _))
+            if (sessionId is null || !store.TryGet(sessionId, out _))
             {
                 context.RejectPrincipal();
-
-                await context.HttpContext.SignOutAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme);
+                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             }
         };
     });
@@ -68,169 +58,46 @@ builder.Services.AddAntiforgery(options =>
     options.Cookie.Path = "/";
 });
 
-// Comunicación con Node.js.
-builder.Services.AddHttpClient<AuthClientService>((services, client) =>
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<EnviaBearerDelegatingHandler>();
+
+// Configuración centralizada para los clientes hacia Node.js.
+void ConfigurarClienteBackend(IServiceProvider services, HttpClient client)
 {
-    var configuration =
-        services.GetRequiredService<IConfiguration>();
+    var configuration = services.GetRequiredService<IConfiguration>();
+    var environment = services.GetRequiredService<IHostEnvironment>();
 
     var baseUrl = configuration["BackendApi:BaseUrl"]
-        ?? throw new InvalidOperationException(
-            "No se configuró la URL del backend.");
+        ?? throw new InvalidOperationException("No se configuró la URL del backend.");
 
     var uri = new Uri(baseUrl, UriKind.Absolute);
 
     var permiteHttpLocal =
-        builder.Environment.IsDevelopment() &&
+        environment.IsDevelopment() &&
         uri.Scheme == Uri.UriSchemeHttp &&
         uri.IsLoopback;
 
     if (uri.Scheme != Uri.UriSchemeHttps && !permiteHttpLocal)
-        throw new InvalidOperationException(
-            "La conexión al backend requiere HTTPS.");
+        throw new InvalidOperationException("La conexión al backend requiere HTTPS.");
 
     client.BaseAddress = uri;
     client.Timeout = TimeSpan.FromSeconds(10);
-});
+}
 
+// Clientes HTTP hacia Node.js.
+builder.Services.AddHttpClient<AuthClientService>(ConfigurarClienteBackend);
 
-builder.Services.AddHttpContextAccessor();
-
-builder.Services.AddTransient<EnviaBearerDelegatingHandler>();
-
-builder.Services.AddHttpClient<CategoriasClientService>(
-    (services, client) =>
-    {
-        var configuration = services
-            .GetRequiredService<IConfiguration>();
-
-        var environment = services
-            .GetRequiredService<IHostEnvironment>();
-
-        var baseUrl = configuration["BackendApi:BaseUrl"]
-            ?? throw new InvalidOperationException(
-                "No se configuró el backend.");
-
-        var uri = new Uri(baseUrl, UriKind.Absolute);
-
-        var permiteHttpLocal =
-            environment.IsDevelopment() &&
-            uri.Scheme == Uri.UriSchemeHttp &&
-            uri.IsLoopback;
-
-        if (uri.Scheme != Uri.UriSchemeHttps &&
-            !permiteHttpLocal)
-        {
-            throw new InvalidOperationException(
-                "El backend requiere HTTPS.");
-        }
-
-        client.BaseAddress = uri;
-        client.Timeout = TimeSpan.FromSeconds(10);
-    })
+builder.Services.AddHttpClient<CategoriasClientService>(ConfigurarClienteBackend)
     .AddHttpMessageHandler<EnviaBearerDelegatingHandler>();
 
-
-
-builder.Services.AddHttpClient<ProductosClientService>(
-    (services, client) =>
-    {
-        var configuration = services
-            .GetRequiredService<IConfiguration>();
-
-        var environment = services
-            .GetRequiredService<IHostEnvironment>();
-
-        var baseUrl = configuration["BackendApi:BaseUrl"]
-            ?? throw new InvalidOperationException(
-                "No se configuró el backend.");
-
-        var uri = new Uri(baseUrl, UriKind.Absolute);
-
-        var permiteHttpLocal =
-            environment.IsDevelopment() &&
-            uri.Scheme == Uri.UriSchemeHttp &&
-            uri.IsLoopback;
-
-        if (uri.Scheme != Uri.UriSchemeHttps &&
-            !permiteHttpLocal)
-        {
-            throw new InvalidOperationException(
-                "El backend requiere HTTPS.");
-        }
-
-        client.BaseAddress = uri;
-        client.Timeout = TimeSpan.FromSeconds(10);
-    })
+builder.Services.AddHttpClient<ProductosClientService>(ConfigurarClienteBackend)
     .AddHttpMessageHandler<EnviaBearerDelegatingHandler>();
 
+builder.Services.AddHttpClient<UsuariosClientService>(ConfigurarClienteBackend)
+    .AddHttpMessageHandler<EnviaBearerDelegatingHandler>();
 
-
-    builder.Services.AddHttpClient<UsuariosClientService>(
-        (services, client) =>
-        {
-            var configuration = services
-                .GetRequiredService<IConfiguration>();
-
-            var environment = services
-                .GetRequiredService<IHostEnvironment>();
-
-            var baseUrl = configuration["BackendApi:BaseUrl"]
-                ?? throw new InvalidOperationException(
-                    "No se configuró el backend.");
-
-            var uri = new Uri(baseUrl, UriKind.Absolute);
-
-            var permiteHttpLocal =
-                environment.IsDevelopment() &&
-                uri.Scheme == Uri.UriSchemeHttp &&
-                uri.IsLoopback;
-
-            if (uri.Scheme != Uri.UriSchemeHttps &&
-                !permiteHttpLocal)
-            {
-                throw new InvalidOperationException(
-                    "El backend requiere HTTPS.");
-            }
-
-            client.BaseAddress = uri;
-            client.Timeout = TimeSpan.FromSeconds(10);
-        })
-        .AddHttpMessageHandler<EnviaBearerDelegatingHandler>();
-
-
-    builder.Services.AddHttpClient<ArchivosClientService>(
-        (services, client) =>
-        {
-            var configuration = services
-                .GetRequiredService<IConfiguration>();
-
-            var environment = services
-                .GetRequiredService<IHostEnvironment>();
-
-            var baseUrl = configuration["BackendApi:BaseUrl"]
-                ?? throw new InvalidOperationException(
-                    "No se configuró el backend.");
-
-            var uri = new Uri(baseUrl, UriKind.Absolute);
-
-            var permiteHttpLocal =
-                environment.IsDevelopment() &&
-                uri.Scheme == Uri.UriSchemeHttp &&
-                uri.IsLoopback;
-
-            if (uri.Scheme != Uri.UriSchemeHttps &&
-                !permiteHttpLocal)
-            {
-                throw new InvalidOperationException(
-                    "El backend requiere HTTPS.");
-            }
-
-            client.BaseAddress = uri;
-            client.Timeout = TimeSpan.FromSeconds(10);
-        })
-        .AddHttpMessageHandler<EnviaBearerDelegatingHandler>();
-
+builder.Services.AddHttpClient<ArchivosClientService>(ConfigurarClienteBackend)
+    .AddHttpMessageHandler<EnviaBearerDelegatingHandler>();
 
 var app = builder.Build();
 
@@ -241,6 +108,28 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Cabeceras HTTP defensivas (Protección contra XSS, Clickjacking y MIME-sniffing).
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Referrer-Policy"] = "no-referrer";
+    context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+    context.Response.Headers["Content-Security-Policy"] =
+        "default-src 'self'; " +
+        "script-src 'self' https://cdn.jsdelivr.net; " +
+        "style-src 'self' https://cdn.jsdelivr.net; " +
+        "img-src 'self' data:; " +
+        "font-src 'self' https://cdn.jsdelivr.net; " +
+        "object-src 'none'; " +
+        "base-uri 'self'; " +
+        "frame-ancestors 'none'; " +
+        "form-action 'self';";
+
+    await next();
+});
+
 app.UseStaticFiles();
 
 app.UseRouting();
@@ -248,7 +137,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllerRoute(
+app.MapControllerRoute( 
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 

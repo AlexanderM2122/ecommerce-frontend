@@ -55,6 +55,7 @@ public class ArchivosController(
 
     // GET /archivos/imagen/{id}
     [HttpGet("imagen/{id:int}")]
+    [Authorize(Roles = "Usuario,Administrador")]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public async Task<IActionResult> Imagen(
         int id,

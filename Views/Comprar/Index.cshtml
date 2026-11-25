@@ -1,0 +1,25 @@
+@model IEnumerable<EcommerceFrontend.Models.Producto>
+@{
+    ViewData["Title"] = "Comprar";
+}
+
+<h2 class="text-center mb-4">Catálogo de productos</h2>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-info">@mensaje</div>
+}
+
+@if (Model.Any())
+{
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var item in Model)
+        {
+            <partial name="_CardPartial" model="item" />
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">No hay productos disponibles por el momento.</div>
+}

@@ -1,0 +1,35 @@
+@model EcommerceFrontend.Models.Producto
+
+<div class="col">
+    <div class="card h-100 shadow-sm">
+        @if (Model.ArchivoId is not null)
+        {
+            <img src="/archivos/imagen/@Model.ArchivoId"
+                alt="@Model.Titulo"
+                class="card-img-top object-fit-contain p-3 bg-white"
+                style="height: 200px;" />
+        }
+        else
+        {
+            <div class="d-flex align-items-center justify-content-center bg-light text-muted border-bottom"
+                style="height: 200px;">
+                <span>Sin imagen</span>
+            </div>
+        }
+
+        <div class="card-body d-flex flex-column">
+            <h5 class="card-title">@Model.Titulo</h5>
+            <p class="card-text text-muted small flex-grow-1">@Model.Descripcion</p>
+            <p class="fs-5 fw-bold text-success mb-3">$@Model.Precio.ToString("N2")</p>
+
+            <form asp-controller="Carrito" asp-action="Agregar" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="productoId" value="@Model.ProductoId" />
+                <div class="input-group input-group-sm">
+                    <input type="number" name="cantidad" value="1" min="1" max="99" class="form-control" required />
+                    <button type="submit" class="btn btn-primary">Agregar al carrito</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

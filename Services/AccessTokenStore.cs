@@ -8,6 +8,7 @@ public interface IAccessTokenStore
 {
     string Create(string jwt);
     bool TryGet(string sessionId, out string? jwt);
+    void Update(string sessionId, string jwt);
     void Remove(string sessionId);
 }
 
@@ -40,6 +41,14 @@ public sealed class MemoryAccessTokenStore(IMemoryCache cache)
         return cache.TryGetValue(
             $"access:{sessionId}", out jwt)
             && !string.IsNullOrWhiteSpace(jwt);
+    }
+
+    public void Update(string sessionId, string jwt)
+    {
+        if (string.IsNullOrWhiteSpace(sessionId) || string.IsNullOrWhiteSpace(jwt))
+            return;
+
+        cache.Set($"access:{sessionId}", jwt, Duracion);
     }
 
     public void Remove(string sessionId)
