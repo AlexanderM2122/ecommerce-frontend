@@ -6,7 +6,7 @@ namespace EcommerceFrontend.Models;
 public class ProductoCrearForm
 {
     public const int TituloMinLength = 2;
-    public const int TituloMaxLength = 150;
+    public const int TituloMaxLength = 255;
     public const int DescripcionMinLength = 5;
     public const int DescripcionMaxLength = 2000;
     public const string PrecioMin = "0.01";
@@ -14,7 +14,7 @@ public class ProductoCrearForm
 
     [Required(ErrorMessage = "El título es obligatorio.")]
     [StringLength(TituloMaxLength, MinimumLength = TituloMinLength,
-        ErrorMessage = "El título debe tener entre 2 y 150 caracteres.")]
+        ErrorMessage = "El título debe tener entre 2 y 255 caracteres.")]
     public string Titulo { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "La descripción es obligatoria.")]
