@@ -29,6 +29,27 @@
 
             <h3 class="card-title">@Model.Titulo</h3>
 
+
+            @if (Model.ArchivoId.HasValue)
+            {
+                <div class="text-center my-4">
+                    <img src="@Url.Action(
+                        "Imagen",
+                        "Archivos",
+                        new { id = Model.ArchivoId.Value })"
+                        alt="@Model.Titulo"
+                        class="img-fluid img-thumbnail"
+                        style="max-height:350px" />
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">
+                    Este producto no tiene imagen asociada.
+                </p>
+            }
+
+
             <hr />
 
             <dl class="row">
