@@ -39,6 +39,9 @@
                                 <a class="nav-link" asp-controller="Carrito" asp-action="Index">
                                     Carrito
                                 </a>
+                                <a class="nav-link" asp-controller="Pedidos" asp-action="Index">
+                                    @(User.IsInRole("Administrador") ? "Pedidos" : "Mis pedidos")
+                                </a>
                             }
 
                             @if (User.IsInRole("Administrador"))

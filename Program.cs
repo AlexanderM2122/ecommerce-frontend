@@ -99,6 +99,9 @@ builder.Services.AddHttpClient<UsuariosClientService>(ConfigurarClienteBackend)
 builder.Services.AddHttpClient<ArchivosClientService>(ConfigurarClienteBackend)
     .AddHttpMessageHandler<EnviaBearerDelegatingHandler>();
 
+builder.Services.AddHttpClient<ComprasClientService>(ConfigurarClienteBackend)
+    .AddHttpMessageHandler<EnviaBearerDelegatingHandler>();
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

@@ -1,0 +1,49 @@
+@model IReadOnlyList<Pedido>
+@{
+    var esAdministrador = User.IsInRole("Administrador");
+    ViewData["Title"] = esAdministrador ? "Pedidos" : "Mis pedidos";
+}
+
+<h1 class="h2 mb-4">@ViewData["Title"]</h1>
+
+@if (Model.Count == 0)
+{
+    <p class="alert alert-info">Aún no hay pedidos.</p>
+    <a asp-controller="Comprar" asp-action="Index" class="btn btn-primary">Ver catálogo</a>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Pedido</th>
+                    <th scope="col">Fecha (UTC)</th>
+                    @if (esAdministrador)
+                    {
+                        <th scope="col">Cliente</th>
+                    }
+                    <th scope="col">Estado</th>
+                    <th scope="col" class="text-end">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var pedido in Model)
+                {
+                    <tr>
+                        <th scope="row">
+                            <a asp-action="Detalle" asp-route-id="@pedido.Id">Pedido #@pedido.Id</a>
+                        </th>
+                        <td>@pedido.CreatedAt.UtcDateTime.ToString("dd/MM/yyyy HH:mm")</td>
+                        @if (esAdministrador)
+                        {
+                            <td>@pedido.Usuario?.Nombre <span class="text-body-secondary">@pedido.Usuario?.Email</span></td>
+                        }
+                        <td>@pedido.Estado</td>
+                        <td class="text-end text-nowrap">$@pedido.Total.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

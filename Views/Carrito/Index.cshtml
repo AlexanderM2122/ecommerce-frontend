@@ -1,14 +1,64 @@
+@model Carrito
 @{
     ViewData["Title"] = "Carrito de compras";
 }
 
-<h2 class="text-center mb-4">Mi Carrito</h2>
-
-<div class="card shadow-sm">
-    <div class="card-body text-center py-5">
-        <p class="lead text-muted mb-3">
-            Módulo de carrito preparado y protegido. Pendiente de conectar con los endpoints de pedidos del backend.
-        </p>
-        <a asp-controller="Comprar" asp-action="Index" class="btn btn-primary">Seguir explorando productos</a>
-    </div>
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+    <h1 class="h2 mb-0">Mi carrito</h1>
+    <a asp-controller="Comprar" asp-action="Index" class="btn btn-outline-primary">Seguir comprando</a>
 </div>
+
+<partial name="_MensajesCompra" />
+
+@if (Model.Items.Count == 0)
+{
+    <p class="alert alert-info">Tu carrito está vacío.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Producto</th>
+                    <th scope="col" class="text-end">Precio unitario</th>
+                    <th scope="col">Cantidad</th>
+                    <th scope="col" class="text-end">Subtotal</th>
+                    <th scope="col"><span class="visually-hidden">Quitar producto</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <th scope="row">@item.Titulo</th>
+                        <td class="text-end text-nowrap">$@item.Precio.ToString("N2")</td>
+                        <td>
+                            <form asp-action="Actualizar" method="post" class="d-flex gap-2">
+                                <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                <input type="number" name="cantidad" value="@item.Cantidad" min="1" max="99"
+                                       class="form-control form-control-sm" aria-label="Cantidad de @item.Titulo" required />
+                                <button type="submit" class="btn btn-outline-primary btn-sm">Actualizar</button>
+                            </form>
+                        </td>
+                        <td class="text-end text-nowrap">$@item.Subtotal.ToString("N2")</td>
+                        <td class="text-end">
+                            <form asp-action="Eliminar" method="post">
+                                <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                <button type="submit" class="btn btn-outline-danger btn-sm"
+                                        aria-label="Quitar @item.Titulo del carrito">Quitar</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-end mt-4">
+        <p class="fs-5 fw-bold">Total: $@Model.Total.ToString("N2")</p>
+        <form asp-action="Confirmar" method="post">
+            <button type="submit" class="btn btn-primary">Confirmar compra simulada</button>
+        </form>
+    </div>
+}

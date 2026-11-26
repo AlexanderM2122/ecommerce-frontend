@@ -3,12 +3,12 @@
     ViewData["Title"] = "Comprar";
 }
 
-<h2 class="text-center mb-4">Catálogo de productos</h2>
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+    <h1 class="h2 mb-0">Catálogo de productos</h1>
+    <a asp-controller="Carrito" asp-action="Index" class="btn btn-outline-primary">Ver carrito</a>
+</div>
 
-@if (TempData["Mensaje"] is string mensaje)
-{
-    <div class="alert alert-info">@mensaje</div>
-}
+<partial name="_MensajesCompra" />
 
 @if (Model.Any())
 {
