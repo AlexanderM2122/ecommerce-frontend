@@ -13,6 +13,9 @@ public class AuthUser
     [JsonPropertyName("rol")]
     public string Rol { get; set; } = string.Empty;
 
+    [JsonPropertyName("reto")]
+    public string? Reto { get; set; }
+
     [JsonPropertyName("jwt")]
     public string Jwt { get; set; } = string.Empty;
 }

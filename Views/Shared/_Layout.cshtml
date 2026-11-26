@@ -50,7 +50,7 @@
                                     Productos
                                 </a>
                                 <a class="nav-link" asp-controller="Categorias" asp-action="Index">
-                                    Categorías
+                                    Categor�as
                                 </a>
                                 <a class="nav-link" asp-controller="Usuarios" asp-action="Index">
                                     Usuarios
@@ -74,13 +74,14 @@
                                 @User.Identity.Name
                             </span>
 
+                            <a class="nav-link" asp-controller="Auth" asp-action="Seguridad">Seguridad</a>
                             <form asp-controller="Auth"
                                 asp-action="Salir"
                                 method="post"
                                 class="d-inline">
                                 @Html.AntiForgeryToken()
                                 <button type="submit" class="btn btn-outline-danger btn-sm">
-                                    Cerrar sesión
+                                    Cerrar sesi�n
                                 </button>
                             </form>
                         }
@@ -90,7 +91,7 @@
                                 Registrarse
                             </a>
                             <a class="nav-link" asp-controller="Auth" asp-action="Index">
-                                Iniciar sesión
+                                Iniciar sesi�n
                             </a>
                         }
                     </div>

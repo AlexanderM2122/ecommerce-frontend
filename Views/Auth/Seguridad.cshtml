@@ -1,0 +1,68 @@
+@model SeguridadCuentaView
+@{
+    ViewData["Title"] = "Seguridad de la cuenta";
+}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="mb-3">Autenticaci�n multifactor</h2>
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                @if (Model.Activo)
+                {
+                    <p class="fw-semibold">Activada</p>
+                    @if (Model.Codigos is { Length: > 0 })
+                    {
+                        <h3 class="h5">C�digos de recuperaci�n</h3>
+                        <p>Gu�rdalos ahora. Se muestran una sola vez y cada c�digo permite iniciar sesi�n una vez.</p>
+                        <ul class="list-unstyled row row-cols-2 g-2 mb-4">
+                            @foreach (var codigo in Model.Codigos)
+                            {
+                                <li class="col"><code>@codigo</code></li>
+                            }
+                        </ul>
+                    }
+                    <form asp-action="DesactivarMfa" method="post">
+                        <div class="mb-3">
+                            <label class="form-label" for="password">Contrase�a actual</label>
+                            <input class="form-control" type="password" id="password" name="password"
+                                   autocomplete="current-password" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="codigo">C�digo de la app o de recuperaci�n</label>
+                            <input class="form-control" id="codigo" name="codigo" autocomplete="one-time-code"
+                                   maxlength="16" required />
+                        </div>
+                        <button class="btn btn-outline-danger" type="submit">Desactivar</button>
+                    </form>
+                }
+                else if (Model.Secreto is { } secreto)
+                {
+                    <p>En tu app autenticadora, agrega una cuenta basada en tiempo con el nombre Ecommerce e ingresa esta clave.</p>
+                    <p class="user-select-all"><code>@secreto</code></p>
+                    <form asp-action="ActivarMfa" method="post">
+                        <div class="mb-3">
+                            <label class="form-label" for="codigo">C�digo de seis d�gitos</label>
+                            <input class="form-control" id="codigo" name="codigo" inputmode="numeric"
+                                   autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required />
+                        </div>
+                        <button class="btn btn-primary" type="submit">Activar</button>
+                        <a class="btn btn-link" asp-action="Seguridad">Empezar de nuevo</a>
+                    </form>
+                }
+                else
+                {
+                    <p>Vincula una app autenticadora para confirmar los pr�ximos inicios de sesi�n.</p>
+                    <form asp-action="PrepararMfa" method="post">
+                        <div class="mb-3">
+                            <label class="form-label" for="password">Contrase�a actual</label>
+                            <input class="form-control" type="password" id="password" name="password"
+                                   autocomplete="current-password" required />
+                        </div>
+                        <button class="btn btn-primary" type="submit">Vincular app</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>

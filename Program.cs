@@ -3,10 +3,36 @@ using EcommerceFrontend.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// MVC y protección CSRF global.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("auth", context =>
+        HttpMethods.IsPost(context.Request.Method)
+            ? RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 30,
+                    Window = TimeSpan.FromMinutes(15),
+                    QueueLimit = 0
+                })
+            : RateLimitPartition.GetNoLimiter("read"));
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retry))
+            context.HttpContext.Response.Headers.RetryAfter =
+                Math.Ceiling(retry.TotalSeconds).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        context.HttpContext.Response.Headers.CacheControl = "no-store";
+        await context.HttpContext.Response.WriteAsync("Demasiados intentos. Int�ntalo m�s tarde.", cancellationToken);
+    };
+});
+
+// MVC y protecci�n CSRF global.
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
@@ -16,7 +42,7 @@ builder.Services.AddControllersWithViews(options =>
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IAccessTokenStore, MemoryAccessTokenStore>();
 
-// Autenticación mediante cookies endurecidas.
+// Autenticaci�n mediante cookies endurecidas.
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -33,14 +59,24 @@ builder.Services
         options.ExpireTimeSpan = TimeSpan.FromMinutes(19);
         options.SlidingExpiration = false;
 
-        // Comprobar que la sesión exista en el servidor.
+        // Comprobar que la sesi�n exista en el servidor.
         options.Events.OnValidatePrincipal = async context =>
         {
             var sessionId = context.Principal?.FindFirst("session_id")?.Value;
             var store = context.HttpContext.RequestServices.GetRequiredService<IAccessTokenStore>();
 
-            if (sessionId is null || !store.TryGet(sessionId, out _))
+            var valid = false;
+            if (sessionId is not null && store.TryGet(sessionId, out var jwt))
             {
+                var auth = context.HttpContext.RequestServices.GetRequiredService<AuthClientService>();
+                var status = await auth.SendAsync<object>(HttpMethod.Get, "/tiempo", null,
+                    context.HttpContext.RequestAborted, jwt);
+                valid = status.Status is not (HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden);
+            }
+
+            if (!valid)
+            {
+                if (sessionId is not null) store.Remove(sessionId);
                 context.RejectPrincipal();
                 await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             }
@@ -49,7 +85,7 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
-// Cookie de protección CSRF.
+// Cookie de protecci�n CSRF.
 builder.Services.AddAntiforgery(options =>
 {
     options.Cookie.Name = "__Host-EcommerceXsrf";
@@ -61,14 +97,14 @@ builder.Services.AddAntiforgery(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<EnviaBearerDelegatingHandler>();
 
-// Configuración centralizada para los clientes hacia Node.js.
+// Configuraci�n centralizada para los clientes hacia Node.js.
 void ConfigurarClienteBackend(IServiceProvider services, HttpClient client)
 {
     var configuration = services.GetRequiredService<IConfiguration>();
     var environment = services.GetRequiredService<IHostEnvironment>();
 
     var baseUrl = configuration["BackendApi:BaseUrl"]
-        ?? throw new InvalidOperationException("No se configuró la URL del backend.");
+        ?? throw new InvalidOperationException("No se configur� la URL del backend.");
 
     var uri = new Uri(baseUrl, UriKind.Absolute);
 
@@ -78,7 +114,7 @@ void ConfigurarClienteBackend(IServiceProvider services, HttpClient client)
         uri.IsLoopback;
 
     if (uri.Scheme != Uri.UriSchemeHttps && !permiteHttpLocal)
-        throw new InvalidOperationException("La conexión al backend requiere HTTPS.");
+        throw new InvalidOperationException("La conexi�n al backend requiere HTTPS.");
 
     client.BaseAddress = uri;
     client.Timeout = TimeSpan.FromSeconds(10);
@@ -112,7 +148,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Cabeceras HTTP defensivas (Protección contra XSS, Clickjacking y MIME-sniffing).
+// Cabeceras HTTP defensivas (Protecci�n contra XSS, Clickjacking y MIME-sniffing).
 app.Use(async (context, next) =>
 {
     context.Response.Headers["X-Content-Type-Options"] = "nosniff";
@@ -136,6 +172,7 @@ app.Use(async (context, next) =>
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

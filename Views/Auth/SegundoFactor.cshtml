@@ -1,0 +1,23 @@
+@model SegundoFactorForm
+@{
+    ViewData["Title"] = "Segundo factor";
+}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="mb-3">Verifica el inicio de sesi�n</h2>
+                <p>Ingresa el c�digo de tu app autenticadora o un c�digo de recuperaci�n.</p>
+                <form asp-action="SegundoFactor" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <input asp-for="Reto" type="hidden" />
+                    <label asp-for="Codigo" class="form-label">C�digo</label>
+                    <input asp-for="Codigo" class="form-control" autocomplete="one-time-code" maxlength="16" required />
+                    <span asp-validation-for="Codigo" class="text-danger"></span>
+                    <button class="btn btn-primary w-100 mt-3" type="submit">Verificar</button>
+                </form>
+                <a class="d-inline-block mt-3" asp-action="Index">Volver al inicio de sesi�n</a>
+            </div>
+        </div>
+    </div>
+</div>
