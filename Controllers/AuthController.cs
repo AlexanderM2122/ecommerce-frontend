@@ -131,4 +131,60 @@ public class AuthController(
 
         return RedirectToAction("Index", "Auth");
     }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult Registro()
+    {
+        if (User.Identity?.IsAuthenticated == true)
+            return RedirectToAction("Index", "Home");
+
+        return View(new RegistroForm());
+    }
+
+    [HttpPost]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Registro(
+        RegistroForm model,
+        CancellationToken cancellationToken)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+            return RedirectToAction("Index", "Home");
+
+        if (!ModelState.IsValid)
+            return View(model);
+
+        try
+        {
+            var (ok, mensajeError) = await auth.RegistrarAsync(model, cancellationToken);
+
+            if (!ok)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    mensajeError ?? "No fue posible completar el registro.");
+                return View(model);
+            }
+
+            TempData["Mensaje"] = "Cuenta creada correctamente. Ya puedes iniciar sesión.";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogWarning(ex, "Error de comunicación con la API.");
+            ModelState.AddModelError(
+                string.Empty,
+                "El servicio no está disponible.");
+            return View(model);
+        }
+        catch (TaskCanceledException ex)
+        {
+            logger.LogWarning(ex, "Tiempo de espera agotado.");
+            ModelState.AddModelError(
+                string.Empty,
+                "El servicio tardó demasiado en responder.");
+            return View(model);
+        }
+    }
 }
