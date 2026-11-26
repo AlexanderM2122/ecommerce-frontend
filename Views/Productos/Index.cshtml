@@ -74,6 +74,7 @@
             <thead>
                 <tr>
                     <th>ID</th>
+                    <th>Imagen</th>
                     <th>Título</th>
                     <th>Descripción</th>
                     <th>Precio</th>
@@ -87,6 +88,26 @@
                 {
                     <tr>
                         <td>@producto.ProductoId</td>
+
+
+                        <td>
+                            @if (producto.ArchivoId.HasValue)
+                            {
+                                <img src="@Url.Action(
+                                    "Imagen",
+                                    "Archivos",
+                                    new { id = producto.ArchivoId.Value })"
+                                    alt="@producto.Titulo"
+                                    class="img-thumbnail"
+                                    loading="lazy"
+                                    style="max-width:80px;max-height:80px" />
+                            }
+                            else
+                            {
+                                <span class="text-muted">Sin imagen</span>
+                            }
+                        </td>
+
 
                         <td>@producto.Titulo</td>
 

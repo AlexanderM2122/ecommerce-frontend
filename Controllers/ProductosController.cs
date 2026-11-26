@@ -15,6 +15,7 @@ namespace EcommerceFrontend.Controllers;
 public class ProductosController(
     ProductosClientService productos,
     CategoriasClientService categorias,
+    ArchivosClientService archivos,
     IAccessTokenStore tokenStore,
     ILogger<ProductosController> logger) : Controller
 {
@@ -129,12 +130,16 @@ public class ProductosController(
     {
         try
         {
+            
             var lista = await categorias.GetAsync(cancellationToken);
+            var imagenes = await archivos.GetAsync(cancellationToken);
 
             return View(new ProductoCrearForm
             {
-                CategoriasDisponibles = lista.ToList()
+                CategoriasDisponibles = lista.ToList(),
+                ArchivosDisponibles = imagenes.ToList()
             });
+
         }
         catch (HttpRequestException ex)
             when (ex.StatusCode == HttpStatusCode.Unauthorized)
@@ -177,6 +182,9 @@ public class ProductosController(
 
             model.CategoriasDisponibles = disponibles.ToList();
 
+            var imagenes = await archivos.GetAsync(cancellationToken);
+            model.ArchivosDisponibles = imagenes.ToList();
+
             var seleccionadas = model.CategoriaIds?
                 .Distinct()
                 .ToList() ?? [];
@@ -208,6 +216,14 @@ public class ProductosController(
                 ModelState.AddModelError(
                     nameof(model.CategoriaIds),
                     "Una categoría seleccionada no es válida.");
+            }
+
+            if (model.ArchivoId.HasValue &&
+                !imagenes.Any(a => a.ArchivoId == model.ArchivoId.Value))
+            {
+                ModelState.AddModelError(
+                    nameof(model.ArchivoId),
+                    "La imagen seleccionada no existe.");
             }
 
             if (!ModelState.IsValid)
@@ -301,12 +317,18 @@ public async Task<IActionResult> Editar(
         if (producto is null)
             return NotFound();
 
+        
+        var imagenes = await archivos.GetAsync(cancellationToken);
+
         var model = new ProductoEditarForm
         {
             Titulo = producto.Titulo,
             Descripcion = producto.Descripcion,
-            Precio = producto.Precio
+            Precio = producto.Precio,
+            ArchivoId = producto.ArchivoId,
+            ArchivosDisponibles = imagenes.ToList()
         };
+
 
         return View(model);
     }
@@ -368,22 +390,35 @@ public async Task<IActionResult> Editar(
                 "El precio admite máximo dos decimales.");
         }
 
-        if (!ModelState.IsValid)
-            return View(model);
-
         try
         {
+            
             var productoActual = await productos.GetByIdAsync(
                 id, cancellationToken);
 
             if (productoActual is null)
                 return NotFound();
 
+            var imagenes = await archivos.GetAsync(cancellationToken);
+            model.ArchivosDisponibles = imagenes.ToList();
+
+            if (model.ArchivoId.HasValue &&
+                !imagenes.Any(a => a.ArchivoId == model.ArchivoId.Value))
+            {
+                ModelState.AddModelError(
+                    nameof(model.ArchivoId),
+                    "La imagen seleccionada no existe.");
+            }
+
+            if (!ModelState.IsValid)
+                return View(model);
+
             await productos.EditarAsync(
                 id,
                 model,
-                productoActual.ArchivoId,
+                model.ArchivoId,
                 cancellationToken);
+
 
             TempData["Mensaje"] =
                 "Producto actualizado correctamente.";

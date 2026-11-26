@@ -33,4 +33,13 @@ public class ProductoCrearForm
 
     [ValidateNever]
     public List<Categoria> CategoriasDisponibles { get; set; } = [];
+
+
+    [Range(1, int.MaxValue,
+        ErrorMessage = "La imagen seleccionada no es válida.")]
+    public int? ArchivoId { get; set; }
+
+    [ValidateNever]
+    public List<Archivo> ArchivosDisponibles { get; set; } = [];
+
 }

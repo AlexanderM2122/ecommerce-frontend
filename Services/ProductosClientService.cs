@@ -59,7 +59,8 @@ public sealed class ProductosClientService(HttpClient client)
         {
             titulo = producto.Titulo.Trim(),
             descripcion = producto.Descripcion.Trim(),
-            precio = producto.Precio
+            precio = producto.Precio,
+            archivoid = producto.ArchivoId
         };
 
         using var response = await client.PostAsJsonAsync(

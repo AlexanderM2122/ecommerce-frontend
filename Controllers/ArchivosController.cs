@@ -54,13 +54,25 @@ public class ArchivosController(
     }
 
     // GET /archivos/imagen/{id}
+    
+    [AllowAnonymous]
     [HttpGet("imagen/{id:int}")]
-    [Authorize(Roles = "Usuario,Administrador")]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+
     public async Task<IActionResult> Imagen(
         int id,
         CancellationToken cancellationToken)
     {
+
+        if (User.Identity?.IsAuthenticated != true)
+            return Challenge();
+
+        if (!User.IsInRole("Usuario") &&
+            !User.IsInRole("Administrador"))
+        {
+            return Forbid();
+        }
+
         if (id <= 0)
             return NotFound();
 

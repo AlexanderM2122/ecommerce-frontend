@@ -63,6 +63,32 @@
                   class="text-danger"></span>
         </div>
 
+
+        <div class="mb-3">
+            <label asp-for="ArchivoId" class="form-label">
+                Imagen del producto (opcional)
+            </label>
+
+            <select asp-for="ArchivoId" class="form-select">
+                <option value="">Sin imagen</option>
+
+                @foreach (var archivo in Model.ArchivosDisponibles)
+                {
+                    <option value="@archivo.ArchivoId">
+                        @archivo.Nombre
+                    </option>
+                }
+            </select>
+
+            <span asp-validation-for="ArchivoId"
+                class="text-danger"></span>
+
+            <div class="form-text">
+                Selecciona una imagen registrada en el módulo Archivos.
+            </div>
+        </div>
+
+
         <div class="mb-4">
             <label class="form-label">Categorías</label>
 
