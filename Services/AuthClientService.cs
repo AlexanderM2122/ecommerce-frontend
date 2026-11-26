@@ -36,4 +36,33 @@ public class AuthClientService(HttpClient client)
 
         return usuario;
     }
+
+    public async Task<(bool Ok, string? MensajeError)> RegistrarAsync(
+        RegistroForm model,
+        CancellationToken cancellationToken = default)
+    {
+        var payload = new
+        {
+            nombre = model.Nombre.Trim(),
+            email = model.Email.Trim(),
+            password = model.Password
+        };
+
+        using var response = await client.PostAsJsonAsync(
+            "api/auth/registro",
+            payload,
+            cancellationToken
+        );
+
+        if (response.StatusCode == HttpStatusCode.BadRequest ||
+            response.StatusCode == HttpStatusCode.Conflict)
+        {
+            return (false, "No fue posible crear la cuenta. Verifica tus datos o intenta con otro correo.");
+        }
+
+        response.EnsureSuccessStatusCode();
+        return (true, null);
+    }
+
 }
+

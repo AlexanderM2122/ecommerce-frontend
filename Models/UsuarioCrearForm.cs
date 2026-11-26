@@ -4,18 +4,24 @@ namespace EcommerceFrontend.Models;
 
 public class UsuarioCrearForm
 {
+    public const int EmailMaxLength = 254;
+    public const int NombreMinLength = 2;
+    public const int NombreMaxLength = 100;
+    public const int PasswordMinLength = 8;
+    public const int PasswordMaxLength = 72;
+
     [Required(ErrorMessage = "El correo es obligatorio.")]
     [EmailAddress(ErrorMessage = "Ingresa un correo válido.")]
-    [StringLength(255)]
+    [StringLength(EmailMaxLength, ErrorMessage = "El correo no debe exceder 254 caracteres.")]
     public string Email { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "El nombre es obligatorio.")]
-    [StringLength(255, MinimumLength = 2,
-        ErrorMessage = "El nombre debe tener entre 2 y 255 caracteres.")]
+    [StringLength(NombreMaxLength, MinimumLength = NombreMinLength,
+        ErrorMessage = "El nombre debe tener entre 2 y 100 caracteres.")]
     public string Nombre { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "La contraseña es obligatoria.")]
-    [StringLength(72, MinimumLength = 8,
+    [StringLength(PasswordMaxLength, MinimumLength = PasswordMinLength,
         ErrorMessage = "La contraseña debe tener entre 8 y 72 caracteres.")]
     [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,72}$",
         ErrorMessage = "La contraseña debe incluir mayúscula, minúscula, número y carácter especial.")]
