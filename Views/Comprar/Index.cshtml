@@ -6,7 +6,7 @@
 }
 
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
-    <h1 class="h2 mb-0">Cat�logo de productos</h1>
+    <h1 class="h2 mb-0">Catálogo de productos</h1>
     <a asp-controller="Carrito" asp-action="Index" class="btn btn-outline-primary">Ver carrito</a>
 </div>
 
@@ -14,14 +14,14 @@
 
 <form asp-controller="Comprar" asp-action="Index" method="get" role="search" class="row g-2 mb-4">
     <div class="col-sm-6 col-lg-3">
-        <label for="busqueda" class="visually-hidden">Buscar por t�tulo</label>
+        <label for="busqueda" class="visually-hidden">Buscar por título</label>
         <input id="busqueda" type="search" name="s" value="@Model.Busqueda"
-               class="form-control" maxlength="100" placeholder="Buscar por t�tulo..." />
+               class="form-control" maxlength="100" placeholder="Buscar por título..." />
     </div>
     <div class="col-sm-6 col-lg-3">
-        <label for="categoriaId" class="visually-hidden">Filtrar por categor�a</label>
+        <label for="categoriaId" class="visually-hidden">Filtrar por categoría</label>
         <select id="categoriaId" name="categoriaId" class="form-select">
-            <option value="">Todas las categor�as</option>
+            <option value="">Todas las categorías</option>
             @foreach (var categoria in Model.Categorias)
             {
                 <option value="@categoria.CategoriaId" selected="@(Model.CategoriaId == categoria.CategoriaId)">
@@ -36,8 +36,8 @@
             <option value="">Orden predeterminado</option>
             <option value="precio-asc" selected="@(Model.Orden == "precio-asc")">Precio: menor a mayor</option>
             <option value="precio-desc" selected="@(Model.Orden == "precio-desc")">Precio: mayor a menor</option>
-            <option value="titulo-asc" selected="@(Model.Orden == "titulo-asc")">T�tulo: A a Z</option>
-            <option value="titulo-desc" selected="@(Model.Orden == "titulo-desc")">T�tulo: Z a A</option>
+            <option value="titulo-asc" selected="@(Model.Orden == "titulo-asc")">Título: A a Z</option>
+            <option value="titulo-desc" selected="@(Model.Orden == "titulo-desc")">Título: Z a A</option>
         </select>
     </div>
     <div class="col-sm-auto">

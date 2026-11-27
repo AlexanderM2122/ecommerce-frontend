@@ -54,8 +54,8 @@ public class ComprarController(
         }
         catch (HttpRequestException ex)
         {
-            logger.LogError(ex, "Error al cargar cat�logo de compra.");
-            return StatusCode(502, "No fue posible cargar el cat�logo.");
+            logger.LogError(ex, "Error al cargar catálogo de compra.");
+            return StatusCode(502, "No fue posible cargar el catálogo.");
         }
     }
 }
