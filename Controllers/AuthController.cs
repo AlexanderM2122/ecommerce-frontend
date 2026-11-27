@@ -1,5 +1,7 @@
 using System.Net;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using Microsoft.AspNetCore.DataProtection;
 using EcommerceFrontend.Models;
 using EcommerceFrontend.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -13,17 +15,18 @@ namespace EcommerceFrontend.Controllers;
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 [EnableRateLimiting("auth")]
 [Authorize]
-public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore) : Controller
+public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore, IDataProtectionProvider protection) : Controller
 {
     private const string Scheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    private const string GenericEmailMessage = "Si la cuenta cumple los requisitos, recibirás un correo con el enlace.";
+    private const string GenericEmailMessage = "Si la cuenta cumple los requisitos, recibir�s un correo con el c�digo.";
+    private const string PendingCookie = "__Host-EcommercePendingEmail";
 
     [HttpGet, AllowAnonymous]
     public IActionResult Index()
     {
         if (User.Identity?.IsAuthenticated == true)
             return RedirectToAction("Index", "Home");
-        return View(new Login());
+        return PendingEmail() is not null ? RedirectToAction(nameof(VerificarCorreo)) : View(new Login());
     }
 
     [HttpPost, AllowAnonymous]
@@ -35,6 +38,11 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
             return View(model);
 
         var result = await Post<AuthUser>("", model, ct);
+        if (result.Status == HttpStatusCode.Forbidden && result.Code == "correo_pendiente" && result.Email is { Length: > 0 } email)
+        {
+            SetPendingEmail(email);
+            return RedirectToAction(nameof(VerificarCorreo));
+        }
         if (!result.Success)
         {
             AddError(result);
@@ -60,7 +68,7 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
         var result = await Post<AuthUser>("/mfa/login", model, ct);
         if (result.Status == HttpStatusCode.Unauthorized)
         {
-            TempData["AuthError"] = result.Message ?? "Vuelve a ingresar para iniciar sesión.";
+            TempData["AuthError"] = result.Message ?? "Vuelve a ingresar para iniciar sesi�n.";
             return RedirectToAction(nameof(Index));
         }
         if (!result.Success)
@@ -76,7 +84,7 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
         if (string.IsNullOrWhiteSpace(user?.Email) || string.IsNullOrWhiteSpace(user.Nombre) ||
             string.IsNullOrWhiteSpace(user.Jwt) || user.Rol is not ("Administrador" or "Usuario"))
         {
-            ModelState.AddModelError(string.Empty, "La respuesta del servidor no es válida.");
+            ModelState.AddModelError(string.Empty, "La respuesta del servidor no es v�lida.");
             return View(view, model);
         }
 
@@ -102,6 +110,7 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
             tokenStore.Remove(sessionId);
             throw;
         }
+        ClearPendingEmail();
         return RedirectToAction("Index", "Home");
     }
 
@@ -131,19 +140,46 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
         if (!ModelState.IsValid)
             return View(model);
 
-        var result = await Post<object>("/registro", new { model.Nombre, model.Email, model.Password }, ct);
+        var result = await Post<AuthUser>("/registro", new { model.Nombre, model.Email, model.Password }, ct);
         if (!result.Success)
         {
             AddError(result);
             return View(model);
         }
 
-        TempData["AuthMessage"] = "Cuenta creada. Revisa tu correo para verificarla.";
+        SetPendingEmail(result.Data?.Email is { Length: > 0 } email ? email : model.Email.Trim());
+        TempData["CodeMessage"] = "Cuenta creada. Revisa tu correo para obtener el c�digo.";
+        return RedirectToAction(nameof(VerificarCorreo));
+    }
+
+    private ITimeLimitedDataProtector PendingProtector =>
+        protection.CreateProtector("EcommerceFrontend.Auth.PendingEmail").ToTimeLimitedDataProtector();
+
+    private void SetPendingEmail(string email) =>
+        Response.Cookies.Append(PendingCookie, PendingProtector.Protect(email, TimeSpan.FromDays(1)),
+            new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Lax, Path = "/", MaxAge = TimeSpan.FromDays(1) });
+
+    private string? PendingEmail()
+    {
+        if (!Request.Cookies.TryGetValue(PendingCookie, out var encrypted))
+            return null;
+        try { return PendingProtector.Unprotect(encrypted); }
+        catch (CryptographicException) { return null; }
+    }
+
+    private void ClearPendingEmail() =>
+        Response.Cookies.Delete(PendingCookie, new CookieOptions { Secure = true, HttpOnly = true, SameSite = SameSiteMode.Lax, Path = "/" });
+
+    [HttpPost, AllowAnonymous]
+    public IActionResult CambiarCuenta()
+    {
+        ClearPendingEmail();
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet, AllowAnonymous]
-    public IActionResult ReenviarVerificacion() => EmailView(new(), true);
+    public IActionResult ReenviarVerificacion() =>
+        PendingEmail() is not null ? RedirectToAction(nameof(VerificarCorreo)) : EmailView(new(), true);
 
     [HttpPost, AllowAnonymous]
     public Task<IActionResult> ReenviarVerificacion(CorreoCuentaForm model, CancellationToken ct) =>
@@ -155,6 +191,27 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
     [HttpPost, AllowAnonymous]
     public Task<IActionResult> RecuperarPassword(CorreoCuentaForm model, CancellationToken ct) =>
         RequestEmail(model, false, ct);
+
+    [HttpPost, AllowAnonymous]
+    public async Task<IActionResult> ReenviarCodigo(bool verificar, CancellationToken ct)
+    {
+        var email = verificar ? PendingEmail() : RecoveryEmail();
+        if (email is null)
+            return RedirectToAction(verificar ? nameof(ReenviarVerificacion) : nameof(RecuperarPassword));
+
+        var path = verificar ? "/reenviar-verificacion" : "/recuperar-password";
+        var result = await Post<object>(path, new { email }, ct);
+        if (!result.Success)
+        {
+            AddError(result);
+            return CodeView(email, verificar, new());
+        }
+
+        if (!verificar)
+            TempData.Remove("PasswordGrant");
+        TempData["CodeMessage"] = GenericEmailMessage;
+        return RedirectToAction(verificar ? nameof(VerificarCorreo) : nameof(VerificarRecuperacion));
+    }
 
     private IActionResult EmailView(CorreoCuentaForm model, bool verify)
     {
@@ -173,51 +230,112 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
             AddError(result);
             return EmailView(model, verify);
         }
-        TempData["AuthMessage"] = GenericEmailMessage;
-        return RedirectToAction(nameof(Index));
+
+        var email = model.Email.Trim();
+        if (verify)
+        {
+            SetPendingEmail(email);
+        }
+        else
+        {
+            TempData["RecoveryEmail"] = email;
+            TempData.Remove("PasswordGrant");
+        }
+        TempData["CodeMessage"] = GenericEmailMessage;
+        return RedirectToAction(verify ? nameof(VerificarCorreo) : nameof(VerificarRecuperacion));
     }
 
     [HttpGet, AllowAnonymous]
-    public IActionResult VerificarCorreo(string? token) =>
-        ValidToken(token) ? View(model: token) : InvalidLink();
+    public IActionResult VerificarCorreo() =>
+        PendingEmail() is { } email ? CodeView(email, true, new()) : RedirectToAction(nameof(ReenviarVerificacion));
 
     [HttpPost, AllowAnonymous]
-    public async Task<IActionResult> VerificarCorreo(string? token, CancellationToken ct)
+    public async Task<IActionResult> VerificarCorreo(CodigoCorreoForm model, CancellationToken ct)
     {
-        if (!ValidToken(token))
-            return InvalidLink();
-        var result = await Post<object>("/verificar-correo", new { token }, ct);
+        if (PendingEmail() is not { } email)
+            return RedirectToAction(nameof(ReenviarVerificacion));
+        if (!ModelState.IsValid)
+            return CodeView(email, true, model);
+
+        var result = await Post<object>("/verificar-correo", new { email, model.Codigo }, ct);
         if (!result.Success)
         {
             AddError(result);
-            return View(model: token);
+            return CodeView(email, true, model);
         }
-        TempData["AuthMessage"] = "Correo verificado. Ya puedes iniciar sesión.";
+
+        ClearPendingEmail();
+        TempData["AuthMessage"] = "Correo verificado. Ya puedes iniciar sesi�n.";
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet, AllowAnonymous]
-    public IActionResult RestablecerPassword(string? token) =>
-        ValidToken(token) ? View(new RestablecerCuentaForm { Token = token! }) : InvalidLink();
+    public IActionResult VerificarRecuperacion() =>
+        RecoveryEmail() is { } email ? CodeView(email, false, new()) : RedirectToAction(nameof(RecuperarPassword));
+
+    [HttpPost, AllowAnonymous]
+    public async Task<IActionResult> VerificarRecuperacion(CodigoCorreoForm model, CancellationToken ct)
+    {
+        if (RecoveryEmail() is not { } email)
+            return RedirectToAction(nameof(RecuperarPassword));
+        if (!ModelState.IsValid)
+            return CodeView(email, false, model);
+
+        var result = await Post<PasswordGrant>("/verificar-recuperacion", new { email, model.Codigo }, ct);
+        if (!result.Success || !ValidToken(result.Data?.Token))
+        {
+            AddError(result);
+            return CodeView(email, false, model);
+        }
+
+        TempData["PasswordGrant"] = result.Data!.Token;
+        return RedirectToAction(nameof(RestablecerPassword));
+    }
+
+    private string? RecoveryEmail() => TempData.Peek("RecoveryEmail") as string;
+
+    private IActionResult CodeView(string email, bool verify, CodigoCorreoForm model)
+    {
+        ViewData["Verificar"] = verify;
+        ViewData["Email"] = email;
+        return View("CodigoCorreo", model);
+    }
+
+    [HttpGet, AllowAnonymous]
+    public IActionResult RestablecerPassword() =>
+        ValidToken(TempData.Peek("PasswordGrant") as string)
+            ? View(new RestablecerCuentaForm())
+            : RedirectToAction(nameof(VerificarRecuperacion));
 
     [HttpPost, AllowAnonymous]
     public async Task<IActionResult> RestablecerPassword(RestablecerCuentaForm model, CancellationToken ct)
     {
-        if (!ValidToken(model.Token))
-            return InvalidLink();
+        var token = TempData.Peek("PasswordGrant") as string;
+        if (!ValidToken(token))
+            return RedirectToAction(nameof(VerificarRecuperacion));
         if (!ModelState.IsValid)
             return View(model);
-        var result = await Post<object>("/restablecer-password", new { model.Token, model.Password }, ct);
+
+        var result = await Post<object>("/restablecer-password", new { token, model.Password }, ct);
+        if (result.Status == HttpStatusCode.Gone)
+        {
+            TempData.Remove("PasswordGrant");
+            TempData["CodeError"] = result.Message ?? "La autorizaci�n venci�. Solicita otro c�digo.";
+            return RedirectToAction(nameof(VerificarRecuperacion));
+        }
         if (!result.Success)
         {
             AddError(result);
             return View(model);
         }
+
+        TempData.Remove("PasswordGrant");
+        TempData.Remove("RecoveryEmail");
         var sessionId = User.FindFirstValue("session_id");
         if (sessionId is not null) tokenStore.Remove(sessionId);
         TempData.Remove("MfaSetup");
         await HttpContext.SignOutAsync(Scheme);
-        TempData["AuthMessage"] = "Contraseña actualizada. Inicia sesión con tu contraseña nueva.";
+        TempData["AuthMessage"] = "Contrase�a actualizada. Inicia sesi�n con tu contrase�a nueva.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -302,13 +420,7 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
             if (result.RetryAfter is { } seconds)
                 Response.Headers.RetryAfter = seconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
         }
-        ModelState.AddModelError(string.Empty, result.Message ?? "El servicio no está disponible. Inténtalo más tarde.");
-    }
-
-    private IActionResult InvalidLink()
-    {
-        TempData["AuthError"] = "El enlace es inválido, venció o ya fue utilizado.";
-        return RedirectToAction(nameof(Index));
+        ModelState.AddModelError(string.Empty, result.Message ?? "El servicio no est� disponible. Int�ntalo m�s tarde.");
     }
 
     private static bool ValidToken(string? token) =>

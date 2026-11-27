@@ -6,7 +6,7 @@ using System.Text.Json;
 namespace EcommerceFrontend.Services;
 
 public record AuthApiResponse<T>(
-    HttpStatusCode Status, T? Data = default, string? Message = null, int? RetryAfter = null)
+    HttpStatusCode Status, T? Data = default, string? Message = null, int? RetryAfter = null, string? Code = null, string? Email = null)
 {
     public bool Success => (int)Status is >= 200 and < 300;
 }
@@ -34,28 +34,30 @@ public class AuthClientService(HttpClient client, ILogger<AuthClientService> log
                 return new(response.StatusCode, data);
             }
 
-            string? message = null;
+            AuthError? error = null;
             if ((int)response.StatusCode < 500 && response.Content.Headers.ContentType?.MediaType == "application/json")
             {
-                var error = await response.Content.ReadFromJsonAsync<AuthError>(cancellationToken: cancellationToken);
-                message = error?.Mensaje;
+                error = await response.Content.ReadFromJsonAsync<AuthError>(cancellationToken: cancellationToken);
             }
             var retry = response.Headers.RetryAfter?.Delta?.TotalSeconds;
-            return new(response.StatusCode, Message: message, RetryAfter: retry is null ? null : (int)Math.Ceiling(retry.Value));
+            return new(response.StatusCode, Message: error?.Mensaje, RetryAfter: retry is null ? null : (int)Math.Ceiling(retry.Value),
+                Code: error?.Codigo, Email: error?.Email);
         }
         catch (Exception ex) when (
             ex is HttpRequestException or JsonException or NotSupportedException ||
             ex is OperationCanceledException && !cancellationToken.IsCancellationRequested)
         {
-            // Los errores de serialización pueden contener datos del segundo factor.
-            logger.LogWarning("Error de comunicación con la API de autenticación ({Tipo}).", ex.GetType().Name);
+            // Los errores de serializaci�n pueden contener datos del segundo factor.
+            logger.LogWarning("Error de comunicaci�n con la API de autenticaci�n ({Tipo}).", ex.GetType().Name);
             return new(HttpStatusCode.ServiceUnavailable);
         }
     }
 
-    private record AuthError(string? Mensaje);
+    private record AuthError(string? Mensaje, string? Codigo, string? Email);
 }
 
 public record MfaState(bool Activo);
 public record MfaSetup(string Secreto);
 public record MfaChange(string Jwt, string[]? Codigos);
+
+public record PasswordGrant(string Token);
