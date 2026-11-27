@@ -1,7 +1,8 @@
-@model IEnumerable<EcommerceFrontend.Models.Producto>
+@model CatalogoCompra
 @{
     ViewData["Title"] = "Comprar";
-    var busqueda = ViewData["Busqueda"] as string;
+    var hayFiltros = !string.IsNullOrWhiteSpace(Model.Busqueda) || Model.CategoriaId.HasValue;
+    var hayOrden = Model.Orden is "precio-asc" or "precio-desc" or "titulo-asc" or "titulo-desc";
 }
 
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
@@ -12,24 +13,46 @@
 <partial name="_MensajesCompra" />
 
 <form asp-controller="Comprar" asp-action="Index" method="get" role="search" class="row g-2 mb-4">
-    <div class="col-sm-8 col-lg-6">
+    <div class="col-sm-6 col-lg-3">
         <label for="busqueda" class="visually-hidden">Buscar por t�tulo</label>
-        <input id="busqueda" type="search" name="s" value="@busqueda"
+        <input id="busqueda" type="search" name="s" value="@Model.Busqueda"
                class="form-control" maxlength="100" placeholder="Buscar por t�tulo..." />
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <label for="categoriaId" class="visually-hidden">Filtrar por categor�a</label>
+        <select id="categoriaId" name="categoriaId" class="form-select">
+            <option value="">Todas las categor�as</option>
+            @foreach (var categoria in Model.Categorias)
+            {
+                <option value="@categoria.CategoriaId" selected="@(Model.CategoriaId == categoria.CategoriaId)">
+                    @categoria.Nombre
+                </option>
+            }
+        </select>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <label for="orden" class="visually-hidden">Ordenar por</label>
+        <select id="orden" name="orden" class="form-select">
+            <option value="">Orden predeterminado</option>
+            <option value="precio-asc" selected="@(Model.Orden == "precio-asc")">Precio: menor a mayor</option>
+            <option value="precio-desc" selected="@(Model.Orden == "precio-desc")">Precio: mayor a menor</option>
+            <option value="titulo-asc" selected="@(Model.Orden == "titulo-asc")">T�tulo: A a Z</option>
+            <option value="titulo-desc" selected="@(Model.Orden == "titulo-desc")">T�tulo: Z a A</option>
+        </select>
     </div>
     <div class="col-sm-auto">
         <button type="submit" class="btn btn-primary">Buscar</button>
-        @if (!string.IsNullOrWhiteSpace(busqueda))
+        @if (hayFiltros || hayOrden)
         {
             <a asp-controller="Comprar" asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
         }
     </div>
 </form>
 
-@if (Model.Any())
+@if (Model.Productos.Count > 0)
 {
     <div class="row row-cols-1 row-cols-md-3 g-4">
-        @foreach (var item in Model)
+        @foreach (var item in Model.Productos)
         {
             <partial name="_CardPartial" model="item" />
         }
@@ -38,8 +61,8 @@
 else
 {
     <div class="alert alert-warning">
-        @(string.IsNullOrWhiteSpace(busqueda)
+        @(!hayFiltros
             ? "No hay productos disponibles por el momento."
-            : "No se encontraron productos con ese t�tulo.")
+            : "No se encontraron productos con los filtros seleccionados.")
     </div>
 }
