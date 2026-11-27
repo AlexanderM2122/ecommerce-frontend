@@ -1,0 +1,47 @@
+@using System.Security.Claims
+@model CambiarPasswordForm
+@{
+    ViewData["Title"] = "Mi perfil";
+}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-7 col-lg-6">
+        <h1 class="h2 mb-4">Mi perfil</h1>
+        <dl class="row mb-4">
+            <dt class="col-sm-4">Nombre</dt>
+            <dd class="col-sm-8">@User.FindFirstValue(ClaimTypes.GivenName)</dd>
+            <dt class="col-sm-4">Correo electr�nico</dt>
+            <dd class="col-sm-8">@User.Identity?.Name</dd>
+            <dt class="col-sm-4">Rol</dt>
+            <dd class="col-sm-8">@User.FindFirstValue(ClaimTypes.Role)</dd>
+        </dl>
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="h4 mb-3">Cambiar contrase�a</h2>
+                <form asp-action="CambiarPassword" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                    <div class="mb-3">
+                        <label asp-for="PasswordActual" class="form-label">Contrase�a actual</label>
+                        <input asp-for="PasswordActual" class="form-control" autocomplete="current-password" required />
+                        <span asp-validation-for="PasswordActual" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label">Contrase�a nueva</label>
+                        <input asp-for="Password" class="form-control" autocomplete="new-password"
+                               aria-describedby="requisitos-password" required />
+                        <div id="requisitos-password" class="form-text">
+                            Usa de 8 a 72 caracteres, con may�scula, min�scula, n�mero y s�mbolo.
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ConfirmarPassword" class="form-label">Confirmar contrase�a nueva</label>
+                        <input asp-for="ConfirmarPassword" class="form-control" autocomplete="new-password" required />
+                        <span asp-validation-for="ConfirmarPassword" class="text-danger"></span>
+                    </div>
+                    <p class="form-text">Cuando guardes el cambio, tendr�s que volver a iniciar sesi�n.</p>
+                    <button class="btn btn-primary" type="submit">Cambiar contrase�a</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
