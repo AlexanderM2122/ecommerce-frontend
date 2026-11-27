@@ -2,14 +2,14 @@
 @{
     var verificar = ViewData["Verificar"] is true;
     var accion = verificar ? "VerificarCorreo" : "VerificarRecuperacion";
-    ViewData["Title"] = verificar ? "Verificar correo" : "Verificar c�digo de recuperaci�n";
+    ViewData["Title"] = verificar ? "Verificar correo" : "Verificar código de recuperación";
 }
 <div class="row justify-content-center mt-5">
     <div class="col-md-5">
         <div class="card shadow-sm">
             <div class="card-body p-4">
                 <h2 class="mb-3">@ViewData["Title"]</h2>
-                <p>Ingresa el c�digo de seis d�gitos enviado a <strong>@ViewData["Email"]</strong>. El c�digo vence en 10 minutos.</p>
+                <p>Ingresa el código de seis dígitos enviado a <strong>@ViewData["Email"]</strong>. El código vence en 10 minutos.</p>
                 @if (TempData["CodeMessage"] is string mensaje)
                 {
                     <div class="alert alert-info" role="status">@mensaje</div>
@@ -20,16 +20,16 @@
                 }
                 <form asp-action="@accion" method="post">
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                    <label asp-for="Codigo" class="form-label">C�digo</label>
+                    <label asp-for="Codigo" class="form-label">Código</label>
                     <input asp-for="Codigo" class="form-control" type="text" inputmode="numeric"
                            autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required />
                     <span asp-validation-for="Codigo" class="text-danger"></span>
-                    <button class="btn btn-primary w-100 mt-3" type="submit">Verificar c�digo</button>
+                    <button class="btn btn-primary w-100 mt-3" type="submit">Verificar código</button>
                 </form>
                 <form asp-action="ReenviarCodigo" method="post" class="mt-3">
                     <input type="hidden" name="verificar" value="@(verificar ? "true" : "false")" />
-                    <button class="btn btn-outline-primary w-100" type="submit">Reenviar c�digo</button>
-                    <p class="form-text">Espera al menos un minuto entre env�os.</p>
+                    <button class="btn btn-outline-primary w-100" type="submit">Reenviar código</button>
+                    <p class="form-text">Espera al menos un minuto entre envíos.</p>
                 </form>
                 @if (verificar)
                 {

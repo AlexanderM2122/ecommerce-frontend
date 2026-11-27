@@ -18,7 +18,7 @@ namespace EcommerceFrontend.Controllers;
 public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore, IDataProtectionProvider protection) : Controller
 {
     private const string Scheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    private const string GenericEmailMessage = "Si la cuenta cumple los requisitos, recibir?s un correo con el c?digo.";
+    private const string GenericEmailMessage = "Si la cuenta cumple los requisitos, recibirás un correo con el código.";
     private const string PendingCookie = "__Host-EcommercePendingEmail";
 
     [HttpGet, AllowAnonymous]
@@ -68,7 +68,7 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
         var result = await Post<AuthUser>("/mfa/login", model, ct);
         if (result.Status == HttpStatusCode.Unauthorized)
         {
-            TempData["AuthError"] = result.Message ?? "Vuelve a ingresar para iniciar sesi?n.";
+            TempData["AuthError"] = result.Message ?? "Vuelve a ingresar para iniciar sesión.";
             return RedirectToAction(nameof(Index));
         }
         if (!result.Success)
@@ -84,7 +84,7 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
         if (string.IsNullOrWhiteSpace(user?.Email) || string.IsNullOrWhiteSpace(user.Nombre) ||
             string.IsNullOrWhiteSpace(user.Jwt) || user.Rol is not ("Administrador" or "Usuario"))
         {
-            ModelState.AddModelError(string.Empty, "La respuesta del servidor no es v?lida.");
+            ModelState.AddModelError(string.Empty, "La respuesta del servidor no es válida.");
             return View(view, model);
         }
 
@@ -148,7 +148,7 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
         }
 
         SetPendingEmail(result.Data?.Email is { Length: > 0 } email ? email : model.Email.Trim());
-        TempData["CodeMessage"] = "Cuenta creada. Revisa tu correo para obtener el c?digo.";
+        TempData["CodeMessage"] = "Cuenta creada. Revisa tu correo para obtener el código.";
         return RedirectToAction(nameof(VerificarCorreo));
     }
 
@@ -265,7 +265,7 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
         }
 
         ClearPendingEmail();
-        TempData["AuthMessage"] = "Correo verificado. Ya puedes iniciar sesi?n.";
+        TempData["AuthMessage"] = "Correo verificado. Ya puedes iniciar sesión.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -320,7 +320,7 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
         if (result.Status == HttpStatusCode.Gone)
         {
             TempData.Remove("PasswordGrant");
-            TempData["CodeError"] = result.Message ?? "La autorizaci?n venci?. Solicita otro c?digo.";
+            TempData["CodeError"] = result.Message ?? "La autorización venció. Solicita otro código.";
             return RedirectToAction(nameof(VerificarRecuperacion));
         }
         if (!result.Success)
@@ -335,7 +335,7 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
         if (sessionId is not null) tokenStore.Remove(sessionId);
         TempData.Remove("MfaSetup");
         await HttpContext.SignOutAsync(Scheme);
-        TempData["AuthMessage"] = "Contrase?a actualizada. Inicia sesi?n con tu contrase?a nueva.";
+        TempData["AuthMessage"] = "Contraseña actualizada. Inicia sesión con tu contraseña nueva.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -359,7 +359,7 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
 
         TempData.Remove("PasswordGrant");
         TempData.Remove("RecoveryEmail");
-        TempData["AuthMessage"] = "Contrase�a actualizada. Inicia sesi�n con tu contrase�a nueva.";
+        TempData["AuthMessage"] = "Contraseña actualizada. Inicia sesión con tu contraseña nueva.";
         return await Salir();
     }
 
@@ -444,7 +444,7 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
             if (result.RetryAfter is { } seconds)
                 Response.Headers.RetryAfter = seconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
         }
-        ModelState.AddModelError(string.Empty, result.Message ?? "El servicio no est? disponible. Int?ntalo m?s tarde.");
+        ModelState.AddModelError(string.Empty, result.Message ?? "El servicio no está disponible. Inténtalo más tarde.");
     }
 
     private static bool ValidToken(string? token) =>

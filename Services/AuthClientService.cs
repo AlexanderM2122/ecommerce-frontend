@@ -47,8 +47,8 @@ public class AuthClientService(HttpClient client, ILogger<AuthClientService> log
             ex is HttpRequestException or JsonException or NotSupportedException ||
             ex is OperationCanceledException && !cancellationToken.IsCancellationRequested)
         {
-            // Los errores de serializaci�n pueden contener datos del segundo factor.
-            logger.LogWarning("Error de comunicaci�n con la API de autenticaci�n ({Tipo}).", ex.GetType().Name);
+            // Los errores de serialización pueden contener datos del segundo factor.
+            logger.LogWarning("Error de comunicación con la API de autenticación ({Tipo}).", ex.GetType().Name);
             return new(HttpStatusCode.ServiceUnavailable);
         }
     }
