@@ -1,14 +1,30 @@
 @model IEnumerable<EcommerceFrontend.Models.Producto>
 @{
     ViewData["Title"] = "Comprar";
+    var busqueda = ViewData["Busqueda"] as string;
 }
 
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
-    <h1 class="h2 mb-0">Catálogo de productos</h1>
+    <h1 class="h2 mb-0">Cat�logo de productos</h1>
     <a asp-controller="Carrito" asp-action="Index" class="btn btn-outline-primary">Ver carrito</a>
 </div>
 
 <partial name="_MensajesCompra" />
+
+<form asp-controller="Comprar" asp-action="Index" method="get" role="search" class="row g-2 mb-4">
+    <div class="col-sm-8 col-lg-6">
+        <label for="busqueda" class="visually-hidden">Buscar por t�tulo</label>
+        <input id="busqueda" type="search" name="s" value="@busqueda"
+               class="form-control" maxlength="100" placeholder="Buscar por t�tulo..." />
+    </div>
+    <div class="col-sm-auto">
+        <button type="submit" class="btn btn-primary">Buscar</button>
+        @if (!string.IsNullOrWhiteSpace(busqueda))
+        {
+            <a asp-controller="Comprar" asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+        }
+    </div>
+</form>
 
 @if (Model.Any())
 {
@@ -21,5 +37,9 @@
 }
 else
 {
-    <div class="alert alert-warning">No hay productos disponibles por el momento.</div>
+    <div class="alert alert-warning">
+        @(string.IsNullOrWhiteSpace(busqueda)
+            ? "No hay productos disponibles por el momento."
+            : "No se encontraron productos con ese t�tulo.")
+    </div>
 }
