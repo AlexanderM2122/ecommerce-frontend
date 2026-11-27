@@ -138,6 +138,9 @@ builder.Services.AddHttpClient<ArchivosClientService>(ConfigurarClienteBackend)
 builder.Services.AddHttpClient<ComprasClientService>(ConfigurarClienteBackend)
     .AddHttpMessageHandler<EnviaBearerDelegatingHandler>();
 
+builder.Services.AddHttpClient<BitacoraClientService>(ConfigurarClienteBackend)
+    .AddHttpMessageHandler<EnviaBearerDelegatingHandler>();
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

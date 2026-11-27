@@ -1,0 +1,41 @@
+@model IReadOnlyList<RegistroBitacora>
+@{
+    ViewData["Title"] = "Bitácora";
+}
+
+<h1 class="h2 mb-4">Bitácora</h1>
+
+@if (Model.Count == 0)
+{
+    <p class="alert alert-info">Aún no hay registros en la bitácora.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Fecha (UTC)</th>
+                    <th scope="col">Usuario</th>
+                    <th scope="col">Acción</th>
+                    <th scope="col">Elemento</th>
+                    <th scope="col">Dirección IP</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var registro in Model)
+                {
+                    <tr>
+                        <th scope="row">@registro.Id</th>
+                        <td class="text-nowrap">@(registro.Fecha?.UtcDateTime.ToString("dd/MM/yyyy HH:mm:ss") ?? "—")</td>
+                        <td>@registro.Usuario</td>
+                        <td>@registro.Accion</td>
+                        <td>@(registro.ElementoId ?? "—")</td>
+                        <td>@registro.Ip</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
