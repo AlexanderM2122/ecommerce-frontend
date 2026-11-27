@@ -35,7 +35,16 @@ builder.Services.AddRateLimiter(options =>
 // MVC y protección CSRF global.
 builder.Services.AddControllersWithViews(options =>
 {
-    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+    options.Filters.Add(
+        new AutoValidateAntiforgeryTokenAttribute());
+})
+.AddCookieTempDataProvider(options =>
+{
+    options.Cookie.Name = "__Host-EcommerceTempData";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.Path = "/";
 });
 
 // Almacenamiento del JWT en el servidor.
@@ -160,10 +169,10 @@ app.Use(async (context, next) =>
     context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
     context.Response.Headers["Content-Security-Policy"] =
         "default-src 'self'; " +
-        "script-src 'self' https://cdn.jsdelivr.net; " +
-        "style-src 'self' https://cdn.jsdelivr.net; " +
+        "script-src 'self'; " +
+        "style-src 'self'; " +
         "img-src 'self' data:; " +
-        "font-src 'self' https://cdn.jsdelivr.net; " +
+        "font-src 'self'; " +
         "object-src 'none'; " +
         "base-uri 'self'; " +
         "frame-ancestors 'none'; " +
