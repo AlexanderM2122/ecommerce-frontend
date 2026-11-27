@@ -14,7 +14,7 @@ public class ComprarController(
     ProductosClientService productos,
     CategoriasClientService categorias,
     IAccessTokenStore tokenStore,
-    ILogger<ComprarController> logger) : Controller
+    ILogger<ComprarController> logger) : BackendControllerBase
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(
@@ -45,17 +45,34 @@ public class ComprarController(
 
             return View(new CatalogoCompra(resultados.ToArray(), opciones, s, categoriaId, orden));
         }
-        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
+        catch (HttpRequestException ex)
+            when (ex.StatusCode == HttpStatusCode.Unauthorized)
         {
             var sessionId = User.FindFirst("session_id")?.Value;
-            if (sessionId is not null) tokenStore.Remove(sessionId);
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            if (sessionId is not null)
+                tokenStore.Remove(sessionId);
+
+            await HttpContext.SignOutAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme);
+
             return RedirectToAction("Index", "Auth");
         }
         catch (HttpRequestException ex)
+            when (ex.StatusCode == HttpStatusCode.Forbidden)
         {
-            logger.LogError(ex, "Error al cargar catálogo de compra.");
-            return StatusCode(502, "No fue posible cargar el catálogo.");
+            return Forbid();
+        }
+        catch (HttpRequestException ex)
+        {
+            return ServicioNoDisponible(
+                logger, "cargar el catálogo", ex);
+        }
+        catch (OperationCanceledException ex)
+            when (!cancellationToken.IsCancellationRequested)
+        {
+            return ServicioNoDisponible(
+                logger, "cargar el catálogo", ex);
         }
     }
 }

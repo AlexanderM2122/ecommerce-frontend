@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EcommerceFrontend.Models;
+using System.Text.Json;
 
 namespace EcommerceFrontend.Controllers;
 
@@ -14,7 +15,7 @@ namespace EcommerceFrontend.Controllers;
 public class UsuariosController(
     UsuariosClientService usuarios,
     IAccessTokenStore tokenStore,
-    ILogger<UsuariosController> logger) : Controller
+    ILogger<UsuariosController> logger) : BackendControllerBase
 {
     // GET /usuarios
     [HttpGet("")]
@@ -38,19 +39,17 @@ public class UsuariosController(
         {
             return Forbid();
         }
-        catch (HttpRequestException ex)
-        {
-            logger.LogError(ex,
-                "Error al consultar usuarios.");
-
-            return StatusCode(502,
-                "No fue posible consultar los usuarios.");
-        }
-        catch (TaskCanceledException)
+        catch (OperationCanceledException ex)
             when (!cancellationToken.IsCancellationRequested)
         {
-            return StatusCode(504,
-                "El backend tardó demasiado en responder.");
+            return ServicioNoDisponible(
+                logger, "consultar los pedidos", ex);
+        }
+        catch (Exception ex)
+            when (ex is HttpRequestException or JsonException)
+        {
+            return ServicioNoDisponible(
+                logger, "consultar los pedidos", ex);
         }
     }
 

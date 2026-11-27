@@ -17,7 +17,7 @@ public class ProductosController(
     CategoriasClientService categorias,
     ArchivosClientService archivos,
     IAccessTokenStore tokenStore,
-    ILogger<ProductosController> logger) : Controller
+    ILogger<ProductosController> logger) : BackendControllerBase
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(
@@ -54,18 +54,17 @@ public class ProductosController(
         {
             return Forbid();
         }
-        catch (HttpRequestException ex)
-        {
-            logger.LogError(ex, "Error al consultar productos.");
-
-            return StatusCode(502,
-                "No fue posible consultar los productos.");
-        }
-        catch (TaskCanceledException)
+        catch (OperationCanceledException ex)
             when (!cancellationToken.IsCancellationRequested)
         {
-            return StatusCode(504,
-                "El backend tardó demasiado en responder.");
+            return ServicioNoDisponible(
+                logger, "consultar los pedidos", ex);
+        }
+        catch (Exception ex)
+            when (ex is HttpRequestException or JsonException)
+        {
+            return ServicioNoDisponible(
+                logger, "consultar los pedidos", ex);
         }
     }
 

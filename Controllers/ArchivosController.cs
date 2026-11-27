@@ -14,7 +14,7 @@ namespace EcommerceFrontend.Controllers;
 public class ArchivosController(
     ArchivosClientService archivos,
     IAccessTokenStore tokenStore,
-    ILogger<ArchivosController> logger) : Controller
+    ILogger<ArchivosController> logger) : BackendControllerBase
 {
     // GET /archivos
     [HttpGet("")]
@@ -40,16 +40,14 @@ public class ArchivosController(
         }
         catch (HttpRequestException ex)
         {
-            logger.LogError(ex, "Error al consultar archivos.");
-
-            return StatusCode(502,
-                "No fue posible consultar los archivos.");
+            return ServicioNoDisponible(
+                logger, "consultar los productos", ex);
         }
-        catch (TaskCanceledException)
+        catch (OperationCanceledException ex)
             when (!cancellationToken.IsCancellationRequested)
         {
-            return StatusCode(504,
-                "El backend tardó demasiado en responder.");
+            return ServicioNoDisponible(
+                logger, "consultar los productos", ex);
         }
     }
 

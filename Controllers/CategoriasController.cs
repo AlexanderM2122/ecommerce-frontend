@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace EcommerceFrontend.Controllers;
 
@@ -14,7 +15,7 @@ namespace EcommerceFrontend.Controllers;
 public class CategoriasController(
     CategoriasClientService categorias,
     IAccessTokenStore tokenStore,
-    ILogger<CategoriasController> logger) : Controller
+    ILogger<CategoriasController> logger) : BackendControllerBase
 {
     // GET /categorias
     [HttpGet("")]
@@ -36,18 +37,17 @@ public class CategoriasController(
         {
             return Forbid();
         }
-        catch (HttpRequestException ex)
-        {
-            logger.LogError(ex, "Error al consultar categorías.");
-
-            return StatusCode(502,
-                "No fue posible consultar las categorías.");
-        }
-        catch (TaskCanceledException)
+        catch (OperationCanceledException ex)
             when (!cancellationToken.IsCancellationRequested)
         {
-            return StatusCode(504,
-                "El backend tardó demasiado en responder.");
+            return ServicioNoDisponible(
+                logger, "consultar los pedidos", ex);
+        }
+        catch (Exception ex)
+            when (ex is HttpRequestException or JsonException)
+        {
+            return ServicioNoDisponible(
+                logger, "consultar los pedidos", ex);
         }
     }
 

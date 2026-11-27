@@ -1,0 +1,34 @@
+@{
+    ViewData["Title"] = "Servicio no disponible";
+}
+
+<div class="container py-5">
+    <div class="card shadow-sm mx-auto">
+        <div class="card-body text-center p-5">
+
+            <h1 class="h3">
+                Servicio temporalmente no disponible
+            </h1>
+
+            <p class="text-muted mt-3">
+                En este momento no podemos procesar tu solicitud.
+                Por favor, inténtalo nuevamente más tarde.
+            </p>
+
+            <div class="d-flex justify-content-center gap-2">
+                <a asp-controller="@ViewContext.RouteData.Values["controller"]"
+                asp-action="Index"
+                class="btn btn-primary">
+                    Reintentar
+                </a>
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="btn btn-outline-secondary">
+                    Volver al inicio
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>

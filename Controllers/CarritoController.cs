@@ -16,7 +16,7 @@ namespace EcommerceFrontend.Controllers;
 public class CarritoController(
     ComprasClientService compras,
     IAccessTokenStore tokenStore,
-    ILogger<CarritoController> logger) : Controller
+    ILogger<CarritoController> logger) : BackendControllerBase
 {
     private static readonly ConcurrentDictionary<string, byte> CambiosEnCurso = new();
 
@@ -35,14 +35,17 @@ public class CarritoController(
         {
             return Forbid();
         }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException ex)
+            when (!cancellationToken.IsCancellationRequested)
         {
-            return StatusCode(504, "El servicio tardó demasiado en cargar el carrito.");
+            return ServicioNoDisponible(
+                logger, "cargar el carrito", ex);
         }
-        catch (Exception ex) when (ex is HttpRequestException or JsonException)
+        catch (Exception ex)
+            when (ex is HttpRequestException or JsonException)
         {
-            logger.LogError(ex, "Error al consultar el carrito.");
-            return StatusCode(502, "No fue posible cargar el carrito.");
+            return ServicioNoDisponible(
+                logger, "cargar el carrito", ex);
         }
     }
 
@@ -137,7 +140,9 @@ public class CarritoController(
         }
         catch (Exception ex) when (ex is HttpRequestException or JsonException or OperationCanceledException)
         {
-            logger.LogWarning(ex, "No se pudo confirmar una operación de compra.");
+            logger.LogWarning(
+                "No se pudo confirmar una operación de compra. Tipo: {Tipo}",
+                ex.GetType().Name);
             TempData["Error"] = mensajeIncierto;
         }
         finally

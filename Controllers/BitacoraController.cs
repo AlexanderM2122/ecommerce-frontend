@@ -14,7 +14,7 @@ namespace EcommerceFrontend.Controllers;
 public class BitacoraController(
     BitacoraClientService bitacora,
     IAccessTokenStore tokenStore,
-    ILogger<BitacoraController> logger) : Controller
+    ILogger<BitacoraController> logger) : BackendControllerBase
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -36,14 +36,17 @@ public class BitacoraController(
         {
             return Forbid();
         }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException ex)
+            when (!cancellationToken.IsCancellationRequested)
         {
-            return StatusCode(504, "El servicio tardó demasiado en consultar la bitácora.");
+            return ServicioNoDisponible(
+                logger, "consultar la bitácora", ex);
         }
-        catch (Exception ex) when (ex is HttpRequestException or JsonException)
+        catch (Exception ex)
+            when (ex is HttpRequestException or JsonException)
         {
-            logger.LogError(ex, "Error al consultar la bitácora.");
-            return StatusCode(502, "No fue posible consultar la bitácora.");
+            return ServicioNoDisponible(
+                logger, "consultar la bitácora", ex);
         }
     }
 }

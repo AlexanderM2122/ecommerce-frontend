@@ -14,7 +14,7 @@ namespace EcommerceFrontend.Controllers;
 public class PedidosController(
     ComprasClientService compras,
     IAccessTokenStore tokenStore,
-    ILogger<PedidosController> logger) : Controller
+    ILogger<PedidosController> logger) : BackendControllerBase
 {
     [HttpGet("")]
     public Task<IActionResult> Index(CancellationToken cancellationToken) =>
@@ -49,14 +49,17 @@ public class PedidosController(
         {
             return NotFound("El pedido no está disponible.");
         }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException ex)
+            when (!cancellationToken.IsCancellationRequested)
         {
-            return StatusCode(504, "El servicio tardó demasiado en consultar los pedidos.");
+            return ServicioNoDisponible(
+                logger, "consultar los pedidos", ex);
         }
-        catch (Exception ex) when (ex is HttpRequestException or JsonException)
+        catch (Exception ex)
+            when (ex is HttpRequestException or JsonException)
         {
-            logger.LogError(ex, "Error al consultar pedidos.");
-            return StatusCode(502, "No fue posible consultar los pedidos.");
+            return ServicioNoDisponible(
+                logger, "consultar los pedidos", ex);
         }
     }
 }
