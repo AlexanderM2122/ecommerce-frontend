@@ -46,3 +46,24 @@ main {
 .navbar-brand {
     font-weight: 600;
 }
+
+.imagen-miniatura {
+    max-width: 80px;
+    max-height: 80px;
+}
+
+.imagen-edicion {
+    max-height: 250px;
+}
+
+.imagen-detalle-archivo {
+    max-height: 300px;
+}
+
+.imagen-detalle-producto {
+    max-height: 350px;
+}
+
+.imagen-catalogo {
+    height: 200px;
+}
