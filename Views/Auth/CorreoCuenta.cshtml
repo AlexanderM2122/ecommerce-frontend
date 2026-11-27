@@ -1,15 +1,13 @@
 @model CorreoCuentaForm
 @{
-    var verificar = ViewData["Verificar"] as bool? == true;
-    var accion = verificar ? "ReenviarVerificacion" : "RecuperarPassword";
-    ViewData["Title"] = verificar ? "Verificar correo" : "Recuperar contraseña";
+    ViewData["Title"] = "Recuperar contraseña";
 }
 <div class="row justify-content-center mt-5">
     <div class="col-md-5">
         <div class="card shadow-sm">
             <div class="card-body p-4">
                 <h2 class="mb-3">@ViewData["Title"]</h2>
-                <form asp-action="@accion" method="post">
+                <form asp-action="RecuperarPassword" method="post">
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                     <label asp-for="Email" class="form-label">Correo electrónico</label>
                     <input asp-for="Email" class="form-control" type="email" autocomplete="email" maxlength="254" required />

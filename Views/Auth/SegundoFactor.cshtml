@@ -6,8 +6,8 @@
     <div class="col-md-5">
         <div class="card shadow-sm">
             <div class="card-body p-4">
-                <h2 class="mb-3">Verifica el inicio de sesión</h2>
-                <p>Ingresa el código de tu app autenticadora o un código de recuperación.</p>
+                <h2 class="mb-3">Autenticación multifactor</h2>
+                <p>Ingresa el código de tu app autenticadora o uno de los códigos de respaldo que guardaste al activar esta función.</p>
                 <form asp-action="SegundoFactor" method="post">
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                     <input asp-for="Reto" type="hidden" />

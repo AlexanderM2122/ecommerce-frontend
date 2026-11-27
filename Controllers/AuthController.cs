@@ -26,7 +26,7 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
     {
         if (User.Identity?.IsAuthenticated == true)
             return RedirectToAction("Index", "Home");
-        return PendingEmail() is not null ? RedirectToAction(nameof(VerificarCorreo)) : View(new Login());
+        return View(new Login());
     }
 
     [HttpPost, AllowAnonymous]
@@ -178,26 +178,18 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
     }
 
     [HttpGet, AllowAnonymous]
-    public IActionResult ReenviarVerificacion() =>
-        PendingEmail() is not null ? RedirectToAction(nameof(VerificarCorreo)) : EmailView(new(), true);
-
-    [HttpPost, AllowAnonymous]
-    public Task<IActionResult> ReenviarVerificacion(CorreoCuentaForm model, CancellationToken ct) =>
-        RequestEmail(model, true, ct);
-
-    [HttpGet, AllowAnonymous]
-    public IActionResult RecuperarPassword() => EmailView(new(), false);
+    public IActionResult RecuperarPassword() => View("CorreoCuenta", new CorreoCuentaForm());
 
     [HttpPost, AllowAnonymous]
     public Task<IActionResult> RecuperarPassword(CorreoCuentaForm model, CancellationToken ct) =>
-        RequestEmail(model, false, ct);
+        RequestRecoveryEmail(model, ct);
 
     [HttpPost, AllowAnonymous]
     public async Task<IActionResult> ReenviarCodigo(bool verificar, CancellationToken ct)
     {
         var email = verificar ? PendingEmail() : RecoveryEmail();
         if (email is null)
-            return RedirectToAction(verificar ? nameof(ReenviarVerificacion) : nameof(RecuperarPassword));
+            return RedirectToAction(verificar ? nameof(Index) : nameof(RecuperarPassword));
 
         var path = verificar ? "/reenviar-verificacion" : "/recuperar-password";
         var result = await Post<object>(path, new { email }, ct);
@@ -213,47 +205,33 @@ public class AuthController(AuthClientService auth, IAccessTokenStore tokenStore
         return RedirectToAction(verificar ? nameof(VerificarCorreo) : nameof(VerificarRecuperacion));
     }
 
-    private IActionResult EmailView(CorreoCuentaForm model, bool verify)
-    {
-        ViewData["Verificar"] = verify;
-        return View("CorreoCuenta", model);
-    }
-
-    private async Task<IActionResult> RequestEmail(CorreoCuentaForm model, bool verify, CancellationToken ct)
+    private async Task<IActionResult> RequestRecoveryEmail(CorreoCuentaForm model, CancellationToken ct)
     {
         if (!ModelState.IsValid)
-            return EmailView(model, verify);
-        var path = verify ? "/reenviar-verificacion" : "/recuperar-password";
-        var result = await Post<object>(path, model, ct);
+            return View("CorreoCuenta", model);
+
+        var result = await Post<object>("/recuperar-password", model, ct);
         if (!result.Success)
         {
             AddError(result);
-            return EmailView(model, verify);
+            return View("CorreoCuenta", model);
         }
 
-        var email = model.Email.Trim();
-        if (verify)
-        {
-            SetPendingEmail(email);
-        }
-        else
-        {
-            TempData["RecoveryEmail"] = email;
-            TempData.Remove("PasswordGrant");
-        }
+        TempData["RecoveryEmail"] = model.Email.Trim();
+        TempData.Remove("PasswordGrant");
         TempData["CodeMessage"] = GenericEmailMessage;
-        return RedirectToAction(verify ? nameof(VerificarCorreo) : nameof(VerificarRecuperacion));
+        return RedirectToAction(nameof(VerificarRecuperacion));
     }
 
     [HttpGet, AllowAnonymous]
     public IActionResult VerificarCorreo() =>
-        PendingEmail() is { } email ? CodeView(email, true, new()) : RedirectToAction(nameof(ReenviarVerificacion));
+        PendingEmail() is { } email ? CodeView(email, true, new()) : RedirectToAction(nameof(Index));
 
     [HttpPost, AllowAnonymous]
     public async Task<IActionResult> VerificarCorreo(CodigoCorreoForm model, CancellationToken ct)
     {
         if (PendingEmail() is not { } email)
-            return RedirectToAction(nameof(ReenviarVerificacion));
+            return RedirectToAction(nameof(Index));
         if (!ModelState.IsValid)
             return CodeView(email, true, model);
 
