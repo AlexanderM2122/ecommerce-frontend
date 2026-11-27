@@ -57,6 +57,7 @@
                        type="file"
                        accept=".jpg,image/jpeg"
                        class="form-control"
+                       data-validar-imagen
                        required />
 
                 <span asp-validation-for="File"
@@ -83,3 +84,8 @@
     }
 
 </div>
+
+@section Scripts {
+    <script src="~/js/validar-imagen.js"
+            asp-append-version="true"></script>
+}
