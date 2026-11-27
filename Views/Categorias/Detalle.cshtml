@@ -1,0 +1,23 @@
+@model Categoria
+
+@{
+    ViewData["Title"] = "Detalle de categoría";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">@ViewData["Title"]</h2>
+
+    <dl class="row">
+        <dt class="col-sm-3">ID</dt>
+        <dd class="col-sm-9">@Model.CategoriaId</dd>
+
+        <dt class="col-sm-3">Nombre</dt>
+        <dd class="col-sm-9">@Model.Nombre</dd>
+
+        <dt class="col-sm-3">Protegida</dt>
+        <dd class="col-sm-9">@(Model.Protegida ? "Sí" : "No")</dd>
+    </dl>
+
+    <a asp-action="Index" class="btn btn-outline-secondary">Volver a categorías</a>
+    <a asp-action="Editar" asp-route-id="@Model.CategoriaId" class="btn btn-warning">Editar</a>
+</div>

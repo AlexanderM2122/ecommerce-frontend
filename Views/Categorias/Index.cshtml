@@ -46,6 +46,12 @@
                         </td>
 
                         <td>
+                            <a asp-action="Detalle"
+                               asp-route-id="@categoria.CategoriaId"
+                               class="btn btn-outline-primary btn-sm">
+                                Ver detalle
+                            </a>
+
                             <a asp-controller="Categorias"
                                asp-action="Editar"
                                asp-route-id="@categoria.CategoriaId"

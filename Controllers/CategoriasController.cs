@@ -238,48 +238,53 @@ public async Task<IActionResult> Editar(
     }
 
 
-// GET /categorias/eliminar/{id}
-[HttpGet("eliminar/{id:int}")]
-public async Task<IActionResult> Eliminar(
-    int id,
-    CancellationToken cancellationToken)
-{
-    if (id <= 0)
-        return NotFound();
+    [HttpGet("detalle/{id:int}")]
+    public Task<IActionResult> Detalle(int id, CancellationToken cancellationToken) =>
+        MostrarCategoriaAsync(id, nameof(Detalle), cancellationToken);
 
-    try
+    [HttpGet("eliminar/{id:int}")]
+    public Task<IActionResult> Eliminar(int id, CancellationToken cancellationToken) =>
+        MostrarCategoriaAsync(id, nameof(Eliminar), cancellationToken);
+
+    private async Task<IActionResult> MostrarCategoriaAsync(
+        int id, string vista, CancellationToken cancellationToken)
     {
-        var categoria = await categorias.GetAsync(
-            id, cancellationToken);
-
-        if (categoria is null)
+        if (id <= 0)
             return NotFound();
 
-        return View(categoria);
+        try
+        {
+            var categoria = await categorias.GetAsync(
+                id, cancellationToken);
+
+            if (categoria is null)
+                return NotFound();
+
+            return View(vista, categoria);
+        }
+        catch (HttpRequestException ex)
+            when (ex.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            return await CerrarSesionAsync();
+        }
+        catch (HttpRequestException ex)
+            when (ex.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return Forbid();
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogError(ex, "Error al consultar categoría.");
+            return StatusCode(502,
+                "No fue posible consultar la categoría.");
+        }
+        catch (TaskCanceledException)
+            when (!cancellationToken.IsCancellationRequested)
+        {
+            return StatusCode(504,
+                "El backend tardó demasiado en responder.");
+        }
     }
-    catch (HttpRequestException ex)
-        when (ex.StatusCode == HttpStatusCode.Unauthorized)
-    {
-        return await CerrarSesionAsync();
-    }
-    catch (HttpRequestException ex)
-        when (ex.StatusCode == HttpStatusCode.Forbidden)
-    {
-        return Forbid();
-    }
-    catch (HttpRequestException ex)
-    {
-        logger.LogError(ex, "Error al consultar categoría.");
-        return StatusCode(502,
-            "No fue posible consultar la categoría.");
-    }
-    catch (TaskCanceledException)
-        when (!cancellationToken.IsCancellationRequested)
-    {
-        return StatusCode(504,
-            "El backend tardó demasiado en responder.");
-    }
-}
 
     // POST /categorias/eliminar/{id}
     [HttpPost("eliminar/{id:int}")]
