@@ -99,8 +99,8 @@
         </details>
 
 
-        <div class="mb-4">
-            <label class="form-label">Categorías</label>
+        <fieldset class="mb-4">
+            <legend class="form-label fs-6">Categorías</legend>
 
             @if (Model.CategoriasDisponibles.Count == 0)
             {
@@ -127,7 +127,7 @@
                     </div>
                 }
             }
-        </div>
+        </fieldset>
 
         <button type="submit"
                 class="btn btn-primary">
