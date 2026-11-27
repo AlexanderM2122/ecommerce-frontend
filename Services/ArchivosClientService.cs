@@ -70,7 +70,9 @@ public sealed class ArchivosClientService(HttpClient client)
         var nombreSeguro = Regex.Replace(
             nombreBase,
             @"[^a-zA-Z0-9_-]",
-            "_");
+            "_",
+            RegexOptions.None,
+            TimeSpan.FromMilliseconds(250));
 
         if (nombreSeguro.Length > 60)
             nombreSeguro = nombreSeguro[..60];
@@ -130,7 +132,9 @@ public sealed class ArchivosClientService(HttpClient client)
         var nombreSeguro = Regex.Replace(
             nombreBase,
             @"[^a-zA-Z0-9_-]",
-            "_");
+            "_",
+            RegexOptions.None,
+            TimeSpan.FromMilliseconds(250));
 
         if (nombreSeguro.Length > 60)
             nombreSeguro = nombreSeguro[..60];
