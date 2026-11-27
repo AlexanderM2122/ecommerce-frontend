@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace EcommerceFrontend.Models;
@@ -34,6 +35,9 @@ public class ProductoCrearForm
     [ValidateNever]
     public List<Categoria> CategoriasDisponibles { get; set; } = [];
 
+
+    [ImagenValida]
+    public IFormFile? Imagen { get; set; }
 
     [Range(1, int.MaxValue,
         ErrorMessage = "La imagen seleccionada no es válida.")]

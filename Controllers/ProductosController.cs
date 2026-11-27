@@ -169,6 +169,7 @@ public class ProductosController(
     [HttpPost("crear")]
     [Authorize(Roles = "Administrador")]
     [ValidateAntiForgeryToken]
+    [RequestSizeLimit(6 * 1024 * 1024)]
     public async Task<IActionResult> Crear(
         ProductoCrearForm model,
         CancellationToken cancellationToken)
@@ -218,7 +219,7 @@ public class ProductosController(
                     "Una categoría seleccionada no es válida.");
             }
 
-            if (model.ArchivoId.HasValue &&
+            if (model.Imagen is null && model.ArchivoId.HasValue &&
                 !imagenes.Any(a => a.ArchivoId == model.ArchivoId.Value))
             {
                 ModelState.AddModelError(
@@ -269,7 +270,9 @@ public class ProductosController(
         {
             ModelState.AddModelError(
                 string.Empty,
-                "Los datos del producto no son válidos.");
+                model.Imagen is null
+                    ? "Los datos del producto no son válidos."
+                    : "Revisa los datos y vuelve a seleccionar una imagen JPG válida.");
 
             return View(model);
         }
@@ -361,6 +364,7 @@ public async Task<IActionResult> Editar(
     [HttpPost("editar/{id:int}")]
     [Authorize(Roles = "Administrador")]
     [ValidateAntiForgeryToken]
+    [RequestSizeLimit(6 * 1024 * 1024)]
     public async Task<IActionResult> Editar(
         int id,
         ProductoEditarForm model,
@@ -402,7 +406,7 @@ public async Task<IActionResult> Editar(
             var imagenes = await archivos.GetAsync(cancellationToken);
             model.ArchivosDisponibles = imagenes.ToList();
 
-            if (model.ArchivoId.HasValue &&
+            if (model.Imagen is null && model.ArchivoId.HasValue &&
                 !imagenes.Any(a => a.ArchivoId == model.ArchivoId.Value))
             {
                 ModelState.AddModelError(
@@ -431,7 +435,9 @@ public async Task<IActionResult> Editar(
         {
             ModelState.AddModelError(
                 string.Empty,
-                "Los datos del producto no son válidos.");
+                model.Imagen is null
+                    ? "Los datos del producto no son válidos."
+                    : "Revisa los datos y vuelve a seleccionar una imagen JPG válida.");
 
             return View(model);
         }

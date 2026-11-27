@@ -49,6 +49,20 @@ public sealed class ArchivosClientService(HttpClient client)
         IFormFile archivo,
         CancellationToken cancellationToken = default)
     {
+        using var formulario = new MultipartFormDataContent();
+        AgregarImagen(formulario, archivo);
+
+        using var response = await client.PostAsync(
+            "api/archivos",
+            formulario,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+    }
+
+
+    internal static void AgregarImagen(MultipartFormDataContent formulario, IFormFile archivo)
+    {
         // Normalizar el nombre antes de enviarlo al backend.
         var nombreBase = Path.GetFileNameWithoutExtension(
             archivo.FileName);
@@ -69,8 +83,6 @@ public sealed class ArchivosClientService(HttpClient client)
 
         var nombreFinal = $"{nombreSeguro}.jpg";
 
-        using var formulario = new MultipartFormDataContent();
-
         var contenido = new StreamContent(
             archivo.OpenReadStream());
 
@@ -81,15 +93,7 @@ public sealed class ArchivosClientService(HttpClient client)
             contenido,
             "file",
             nombreFinal);
-
-        using var response = await client.PostAsync(
-            "api/archivos",
-            formulario,
-            cancellationToken);
-
-        response.EnsureSuccessStatusCode();
     }
-
 
     public async Task<Archivo?> GetByIdAsync(
         int id,

@@ -11,7 +11,7 @@
 
     <form asp-controller="Productos"
           asp-action="Crear"
-          method="post">
+          method="post" enctype="multipart/form-data">
 
         @Html.AntiForgeryToken()
 
@@ -65,28 +65,38 @@
 
 
         <div class="mb-3">
-            <label asp-for="ArchivoId" class="form-label">
-                Imagen del producto (opcional)
-            </label>
-
-            <select asp-for="ArchivoId" class="form-select">
-                <option value="">Sin imagen</option>
-
-                @foreach (var archivo in Model.ArchivosDisponibles)
-                {
-                    <option value="@archivo.ArchivoId">
-                        @archivo.Nombre
-                    </option>
-                }
-            </select>
-
-            <span asp-validation-for="ArchivoId"
-                class="text-danger"></span>
-
-            <div class="form-text">
-                Selecciona una imagen registrada en el módulo Archivos.
+            <label asp-for="Imagen" class="form-label">Imagen del producto (opcional)</label>
+            <input asp-for="Imagen" type="file" accept=".jpg,image/jpeg" class="form-control"
+                   aria-describedby="ayuda-imagen" />
+            <span asp-validation-for="Imagen" class="text-danger"></span>
+            <div id="ayuda-imagen" class="form-text">
+                Selecciona un JPG de hasta 5 MB. Se guardará en Archivos al guardar el producto.
             </div>
         </div>
+        <details class="mb-3" open="@(ViewData.ModelState[nameof(Model.ArchivoId)]?.Errors.Count > 0)">
+            <summary>Opciones de imagen guardada</summary>
+                <label asp-for="ArchivoId" class="form-label">
+                    Imagen de Archivos
+                </label>
+
+                <select asp-for="ArchivoId" class="form-select">
+                    <option value="">Sin imagen</option>
+
+                    @foreach (var archivo in Model.ArchivosDisponibles)
+                    {
+                        <option value="@archivo.ArchivoId">
+                            @archivo.Nombre
+                        </option>
+                    }
+                </select>
+
+                <span asp-validation-for="ArchivoId"
+                    class="text-danger"></span>
+
+                <div class="form-text">
+                    Puedes conservar, retirar o reutilizar una imagen guardada.
+                </div>
+        </details>
 
 
         <div class="mb-4">

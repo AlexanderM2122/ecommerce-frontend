@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace EcommerceFrontend.Models;
@@ -21,6 +22,9 @@ public class ProductoEditarForm
     [RegularExpression(@"^\d+(\.\d{1,2})?$",
         ErrorMessage = "El precio debe ser un número válido con máximo 2 decimales.")]
     public decimal Precio { get; set; }
+
+    [ImagenValida]
+    public IFormFile? Imagen { get; set; }
 
     [Range(1, int.MaxValue,
         ErrorMessage = "La imagen seleccionada no es válida.")]

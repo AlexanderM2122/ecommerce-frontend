@@ -1,8 +1,10 @@
 
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using EcommerceFrontend.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace EcommerceFrontend.Services;
 
@@ -55,18 +57,9 @@ public sealed class ProductosClientService(HttpClient client)
         ProductoCrearForm producto,
         CancellationToken cancellationToken = default)
     {
-        var datos = new
-        {
-            titulo = producto.Titulo.Trim(),
-            descripcion = producto.Descripcion.Trim(),
-            precio = producto.Precio,
-            archivoid = producto.ArchivoId
-        };
-
-        using var response = await client.PostAsJsonAsync(
-            "api/productos",
-            datos,
-            cancellationToken);
+        using var contenido = CrearContenido(
+            producto.Titulo, producto.Descripcion, producto.Precio, producto.ArchivoId, producto.Imagen);
+        using var response = await client.PostAsync("api/productos", contenido, cancellationToken);
 
         response.EnsureSuccessStatusCode();
 
@@ -119,22 +112,30 @@ public sealed class ProductosClientService(HttpClient client)
         if (id <= 0)
             throw new ArgumentOutOfRangeException(nameof(id));
 
-        var datos = new
-        {
-            titulo = producto.Titulo.Trim(),
-            descripcion = producto.Descripcion.Trim(),
-            precio = producto.Precio,
-            archivoid = archivoId
-        };
-
-        using var response = await client.PutAsJsonAsync(
-            $"api/productos/{id}",
-            datos,
-            cancellationToken);
+        using var contenido = CrearContenido(
+            producto.Titulo, producto.Descripcion, producto.Precio, archivoId, producto.Imagen);
+        using var response = await client.PutAsync($"api/productos/{id}", contenido, cancellationToken);
 
         response.EnsureSuccessStatusCode();
     }
 
+
+    private static HttpContent CrearContenido(
+        string titulo, string descripcion, decimal precio, int? archivoId, IFormFile? imagen)
+    {
+        titulo = titulo.Trim();
+        descripcion = descripcion.Trim();
+
+        if (imagen is null)
+            return JsonContent.Create(new { titulo, descripcion, precio, archivoid = archivoId });
+
+        var formulario = new MultipartFormDataContent();
+        formulario.Add(new StringContent(titulo), "titulo");
+        formulario.Add(new StringContent(descripcion), "descripcion");
+        formulario.Add(new StringContent(precio.ToString(CultureInfo.InvariantCulture)), "precio");
+        ArchivosClientService.AgregarImagen(formulario, imagen);
+        return formulario;
+    }
 
     public async Task RemoverCategoriaAsync(
         int productoId,
