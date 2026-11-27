@@ -2,14 +2,14 @@
 @model Login
 
 @{
-    ViewData["Title"] = "Iniciar sesi�n";
+    ViewData["Title"] = "Iniciar sesión";
 }
 
 <div class="row justify-content-center mt-5">
     <div class="col-md-5">
         <div class="card shadow-sm">
             <div class="card-body p-4">
-                <h2 class="text-center mb-4">Iniciar sesi�n</h2>
+                <h2 class="text-center mb-4">Iniciar sesión</h2>
 
                 @if (TempData["AuthMessage"] is string mensaje)
                 {
@@ -32,7 +32,7 @@
                     <div class="mb-3">
                         <label asp-for="Email"
                                class="form-label">
-                            Correo electr�nico
+                            Correo electrónico
                         </label>
 
                         <input asp-for="Email"
@@ -48,7 +48,7 @@
                     <div class="mb-3">
                         <label asp-for="Password"
                                class="form-label">
-                            Contrase�a
+                            Contraseña
                         </label>
 
                         <input asp-for="Password"
@@ -67,8 +67,8 @@
                     </button>
                 </form>
                 <div class="d-flex flex-column gap-2 mt-3">
-                    <a asp-action="RecuperarPassword">Olvid� mi contrase�a</a>
-                    <a asp-action="ReenviarVerificacion">Solicitar verificaci�n de correo</a>
+                    <a asp-action="RecuperarPassword">Olvidé mi contraseña</a>
+                    <a asp-action="ReenviarVerificacion">Solicitar verificación de correo</a>
                 </div>
             </div>
         </div>

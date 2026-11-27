@@ -6,15 +6,15 @@
     <div class="col-md-7">
         <div class="card shadow-sm">
             <div class="card-body p-4">
-                <h2 class="mb-3">Autenticaci�n multifactor</h2>
+                <h2 class="mb-3">Autenticación multifactor</h2>
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                 @if (Model.Activo)
                 {
                     <p class="fw-semibold">Activada</p>
                     @if (Model.Codigos is { Length: > 0 })
                     {
-                        <h3 class="h5">C�digos de recuperaci�n</h3>
-                        <p>Gu�rdalos ahora. Se muestran una sola vez y cada c�digo permite iniciar sesi�n una vez.</p>
+                        <h3 class="h5">Códigos de recuperación</h3>
+                        <p>Guárdalos ahora. Se muestran una sola vez y cada código permite iniciar sesión una vez.</p>
                         <ul class="list-unstyled row row-cols-2 g-2 mb-4">
                             @foreach (var codigo in Model.Codigos)
                             {
@@ -24,12 +24,12 @@
                     }
                     <form asp-action="DesactivarMfa" method="post">
                         <div class="mb-3">
-                            <label class="form-label" for="password">Contrase�a actual</label>
+                            <label class="form-label" for="password">Contraseña actual</label>
                             <input class="form-control" type="password" id="password" name="password"
                                    autocomplete="current-password" required />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label" for="codigo">C�digo de la app o de recuperaci�n</label>
+                            <label class="form-label" for="codigo">Código de la app o de recuperación</label>
                             <input class="form-control" id="codigo" name="codigo" autocomplete="one-time-code"
                                    maxlength="16" required />
                         </div>
@@ -42,7 +42,7 @@
                     <p class="user-select-all"><code>@secreto</code></p>
                     <form asp-action="ActivarMfa" method="post">
                         <div class="mb-3">
-                            <label class="form-label" for="codigo">C�digo de seis d�gitos</label>
+                            <label class="form-label" for="codigo">Código de seis dígitos</label>
                             <input class="form-control" id="codigo" name="codigo" inputmode="numeric"
                                    autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required />
                         </div>
@@ -52,10 +52,10 @@
                 }
                 else
                 {
-                    <p>Vincula una app autenticadora para confirmar los pr�ximos inicios de sesi�n.</p>
+                    <p>Vincula una app autenticadora para confirmar los próximos inicios de sesión.</p>
                     <form asp-action="PrepararMfa" method="post">
                         <div class="mb-3">
-                            <label class="form-label" for="password">Contrase�a actual</label>
+                            <label class="form-label" for="password">Contraseña actual</label>
                             <input class="form-control" type="password" id="password" name="password"
                                    autocomplete="current-password" required />
                         </div>
